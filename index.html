@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جستجوی دارو</title>
+    <title>جستجوی دارو - شبیه‌ساز</title>
     <!-- Persian Font: Vazirmatn from cdn.jsdelivr.net -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
 
@@ -101,7 +101,7 @@
             border-radius: 6px;
             font-size: 1.1rem;
             box-sizing: border-box;
-            text-align: right;
+            /* Initial direction and alignment handled by JS */
             font-family: Vazirmatn, sans-serif;
         }
 
@@ -302,7 +302,7 @@
             transition: background-color 0.2s ease-in-out, color 0.2s ease;
             font-weight: 500;
             font-family: Vazirmatn, sans-serif;
-            cursor: pointer; /* Indicate it's clickable */
+            cursor: pointer;
         }
 
         .drug-card .detail-link:hover {
@@ -425,6 +425,8 @@
            }
 
         /* --- Modal (Lightbox) Styling --- */
+        /* Removed detail modal specific styles */
+
         .modal-overlay { /* Used only for Image Modal now */
             position: fixed;
             top: 0;
@@ -756,6 +758,7 @@
         <div id="simulationResult">
              <!-- Main Loading Spinner (added/removed dynamically) -->
             <p id="initialMessage" style="text-align: center;">داروی مورد نظر خود را جستجو کنید.</p>
+            <p id="corsWarning" style="font-size: 0.9em; color: #555; text-align: center;">(توجه: این شبیه‌ساز تلاش می‌کند اطلاعات را از وبسایت خارجی دریافت کند که ممکن است به دلیل سیاست CORS مسدود شود.)</p>
         </div>
     </div>
 
@@ -1090,10 +1093,37 @@
                 // Attach main event listeners
                 this.attachEventListeners();
 
+                 // Handle initial state of input direction
+                if (this.termInput) {
+                    this.handleInputDirection(); // Set initial direction
+                    this.termInput.addEventListener('input', this.handleInputDirection.bind(this)); // Add listener for changes
+                }
+
+
                  // Initially show messages
                  if (this.initialMessage) this.initialMessage.style.display = 'block';
                  if (this.corsWarning) this.corsWarning.style.display = 'block';
             },
+
+             // New method to handle input direction based on characters
+            handleInputDirection: function() {
+                if (!this.termInput) return;
+
+                const value = this.termInput.value;
+                // Regex to check for common Arabic/Persian characters (Unicode range \u0600-\u06FF)
+                const rtlRegex = /[\u0600-\u06FF]/;
+
+                if (rtlRegex.test(value)) {
+                    // Contains RTL characters
+                    this.termInput.style.direction = 'rtl';
+                    this.termInput.style.textAlign = 'right';
+                } else {
+                    // No RTL characters found, default to LTR
+                    this.termInput.style.direction = 'ltr';
+                    this.termInput.style.textAlign = 'left';
+                }
+            },
+
 
             attachEventListeners: function() {
                  if (this.searchForm) this.searchForm.addEventListener('submit', this.handleSearchSubmit.bind(this));
@@ -1328,9 +1358,9 @@
                     let englishTitle = englishLinkElement ? englishLinkElement.textContent.trim() : 'English Title Not Found';
                     englishTitle = englishTitle.replace(/^\(|\)$/g, '').trim();
 
-                    // CORRECTED: Get the detail link href directly
+                    // Get the detail link href
                     const detailLink = persianLinkElement ? persianLinkElement.getAttribute('href') : '#';
-                     // Make detail link absolute for the href
+                     // Make detail link absolute for the href attribute
                     const absoluteDetailLink = detailLink && detailLink !== '#' && !detailLink.startsWith('http') ? `${this.targetBaseUrl}${detailLink}` : detailLink;
 
 
@@ -1387,8 +1417,8 @@
                                         ${details.genericCode ? `<div class="detail-row"><label>کد ژنریک:</label> <span>${details.genericCode}</span></div>` : ''}
                                     </div>
 
-                                    <!-- Link href is now the absolute URL, target="_blank" opens in new tab -->
-                                    <!-- Styling is applied via the CSS class -->
+                                    <!-- Link href is the absolute URL, target="_blank" opens in new tab -->
+                                    <!-- Styling is applied via the CSS class .detail-link -->
                                     <a href="${absoluteDetailLink}" target="_blank" class="detail-link">مشاهده جزئیات در سایت اصلی</a>
                                 </div>
                             </div>
@@ -1427,14 +1457,14 @@
 
                  // Update the DOM
                 this.resultDiv.innerHTML = resultsHtml;
-                // this.resultDiv.className = ''; // Already removed loading/error classes
 
 
                  // Re-attach event listeners to the new pagination links
+                 // These listeners should still trigger performSearch, NOT default link action
                  if (this.resultDiv.querySelector('.pagination')) {
                      this.resultDiv.querySelectorAll('.pagination a').forEach(link => {
                           link.addEventListener('click', function(e) {
-                              e.preventDefault();
+                              e.preventDefault(); // Prevent default link behavior
                               const page = this.getAttribute('data-page');
                               const term = this.getAttribute('data-term');
                               if (page && term) {
@@ -1471,15 +1501,11 @@
                  resultsHtml += `</ul></div>`;
 
                  this.resultDiv.innerHTML = resultsHtml;
-                 // this.resultDiv.className = ''; // Already removed loading/error classes
-
-                  // Event listeners for suggestion links are handled by delegation in handleResultAreaClick
              },
 
              renderGenericNoResults: function() {
                  console.log("No search results or suggestion structure found.");
                  this.resultDiv.innerHTML = '<p style="text-align: center;">نتیجه‌ای برای جستجوی شما یافت نشد.</p>';
-                 // this.resultDiv.className = ''; // Already removed loading/error classes
              },
 
 
