@@ -92,6 +92,7 @@
             width: 100%;
             max-width: 600px;
             gap: 15px;
+            position: relative; /* Needed for clear button positioning */
         }
 
         .subscribe-inputs1 input[type="text"] {
@@ -103,7 +104,36 @@
             box-sizing: border-box;
             /* Initial direction and alignment handled by JS */
             font-family: Vazirmatn, sans-serif;
+            padding-left: 40px; /* Make space for clear button */
         }
+
+         /* Clear Input Button Styling */
+        .clear-input {
+            position: absolute;
+            top: 50%;
+            left: 10px; /* Position on the left */
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #ccc;
+            cursor: pointer;
+            user-select: none;
+            z-index: 2; /* Above input field */
+            transition: color 0.2s ease;
+            display: none; /* Hidden by default */
+             /* Make it focusable */
+            outline: none;
+             background: none;
+             border: none;
+             padding: 0;
+        }
+        .clear-input:hover {
+            color: #888;
+        }
+         .clear-input:focus {
+              outline: 2px solid #007bff;
+              outline-offset: 2px;
+         }
+
 
         .subscribe-inputs1 input[type="submit"] {
             padding: 14px 30px;
@@ -118,13 +148,21 @@
             box-sizing: border-box;
             flex-shrink: 0;
         }
+        /* Disabled state styling */
+        .subscribe-inputs1 input[type="submit"]:disabled {
+             background-color: #a0c8f3;
+             cursor: not-allowed;
+             transform: none;
+        }
 
-        .subscribe-inputs1 input[type="submit"]:hover {
+
+        .subscribe-inputs1 input[type="submit"]:hover:not(:disabled) {
             background-color: #0056b3;
         }
-         .subscribe-inputs1 input[type="submit"]:active {
+         .subscribe-inputs1 input[type="submit"]:active:not(:disabled) {
             transform: scale(0.98);
         }
+
 
         /* Results Area Styling */
         #simulationResult {
@@ -346,6 +384,14 @@
             font-family: Arial, Helvetica, sans-serif;
             cursor: pointer;
         }
+         /* Disabled state for pagination links */
+        .pagination li.disabled a, .pagination li a:disabled {
+             color: #6c757d;
+             pointer-events: none;
+             background-color: #e9ecef;
+              border-color: #dee2e6;
+         }
+
 
         /* Specific border-radius for RTL */
         .pagination li:first-child a {
@@ -363,24 +409,18 @@
         }
 
 
-        .pagination li a:hover {
+        .pagination li a:hover:not(:disabled) {
             background-color: #e9ecef;
             border-color: #ced4da;
         }
 
-        .pagination li.active a {
+        .pagination li.active a, .pagination li a.active {
             background-color: #007bff;
             border-color: #007bff;
             color: white;
             pointer-events: none;
         }
 
-        .pagination li.disabled a {
-            color: #6c757d;
-            pointer-events: none;
-            background-color: #e9ecef;
-             border-color: #dee2e6;
-        }
 
         /* No Results / Suggestions Styling */
         .no-results-container {
@@ -492,7 +532,14 @@
             padding: 0;
             background: none;
             display: none;
+             /* Make image itself focusable for A11y */
+             outline: none;
         }
+         .zoomed-image:focus {
+             outline: 2px solid #007bff; /* Highlight focused image */
+             outline-offset: 3px;
+         }
+
 
         /* Removed Detail Modal Specific Styles */
         /* #detailModal { ... } */
@@ -512,7 +559,13 @@
             opacity: 0;
             display: none;
             pointer-events: auto;
+             /* Make close button focusable for A11y */
+             outline: none;
         }
+         .modal-close:focus {
+             outline: 2px solid #007bff;
+         }
+
          /* Removed dark class for close button as only image modal uses the overlay now */
          /* .modal-close.dark { ... } */
          /* .modal-close.dark:hover { ... } */
@@ -529,7 +582,7 @@
             top: 50%;
             transform: translateY(-50%);
             z-index: 1055;
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(17, 16, 16, 0.2);
             color: #fff;
             border: none;
             padding: 15px;
@@ -546,10 +599,22 @@
              display: flex;
              justify-content: center;
              align-items: center;
+              /* Make nav buttons focusable for A11y */
+             outline: none;
         }
-        .modal-nav-button:hover {
+         .modal-nav-button:focus {
+             outline: 2px solid #007bff;
+         }
+
+        .modal-nav-button:hover:not(:disabled) {
             background-color: rgba(255, 255, 255, 0.4);
         }
+         .modal-nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+             background-color: rgba(255, 255, 255, 0.1);
+         }
+
 
         .prev-image-button { left: 10px; }
          .next-image-button { right: 10px; }
@@ -587,8 +652,14 @@
              cursor: pointer;
              transition: background-color 0.2s ease, border-color 0.2s ease;
              font-family: Vazirmatn, sans-serif;
+              /* Make sort buttons focusable for A11y */
+             outline: none;
          }
-         .sort-controls button:hover {
+          .sort-controls button:focus {
+             outline: 2px solid #007bff;
+         }
+
+         .sort-controls button:hover:not(.active) {
              background-color: #dee2e6;
              border-color: #adb5bd;
          }
@@ -777,8 +848,9 @@
                 <div class="subscribe-inputs1">
                     <div> داروی مورد نظر را جستجو نمایید</div>
                     <form action="#" method="post">
-                        <input id="Term" name="Term" type="text" value="" placeholder="نام دارو..." />
-                        <input value="جستجو" type="submit">
+                        <input id="Term" name="Term" type="text" value="" placeholder="نام دارو..." aria-label="نام دارو یا کد" />
+                         <button class="clear-input" id="clearInput" aria-label="پاک کردن ورودی">×</button>
+                        <input value="جستجو" type="submit" aria-label="جستجو" />
                     </form>
                 </div>
             </div>
@@ -797,13 +869,13 @@
     <div id="modalOverlay" class="modal-overlay"></div>
 
     <!-- Image Modal (Lightbox) Structure -->
-    <div id="imageModal" class="app-modal">
-        <img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image">
+    <div id="imageModal" class="app-modal" role="dialog" aria-modal="true" tabindex="-1">
+        <img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image" tabindex="0">
          <!-- Loading spinner for modal -->
         <div id="modalLoadingSpinner" class="spinner"></div>
          <!-- Navigation buttons -->
-        <button id="prevImageButton" class="modal-nav-button prev-image-button">‹</button>
-        <button id="nextImageButton" class="modal-nav-button next-image-button">›</button>
+        <button id="prevImageButton" class="modal-nav-button prev-image-button" aria-label="عکس قبلی" tabindex="0">‹</button>
+        <button id="nextImageButton" class="modal-nav-button next-image-button" aria-label="عکس بعدی" tabindex="0">›</button>
          <!-- Image count / caption -->
         <div id="modalCaption" class="modal-caption"></div>
     </div>
@@ -812,152 +884,220 @@
      <!-- <div id="detailModal" class="app-modal"> ... </div> -->
 
      <!-- Close buttons - one for each modal type - only Image Modal close is needed -->
-     <span id="closeImageModalButton" class="modal-close">×</span>
+     <button id="closeImageModalButton" class="modal-close" aria-label="بستن" tabindex="0">×</button>
      <!-- Removed close button for detail modal -->
      <!-- <span id="closeDetailModalButton" class="modal-close dark">×</span> -->
 
 
     <script>
-        // Basic Modularity: Wrap related functions and elements in objects
-        const ImageModal = {
-            imageOverlay: null,
-            imageModal: null,
-            zoomedImage: null,
-            closeButton: null,
-            prevButton: null,
-            nextButton: null,
-            caption: null,
-            spinner: null,
+        // Utility function: Debounce
+        function debounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                }, delay);
+            };
+        }
 
-            currentGalleryImages: [],
-            currentImageIndex: 0,
-            currentDrugTitle: '',
+        // Utility function: Get Query Parameters
+        function getQueryParams(url) {
+            const queryStartIndex = url.indexOf('?');
+            if (queryStartIndex === -1) return {};
+            const params = {};
+            const queryString = url.substring(queryStartIndex + 1);
+            if (queryString) {
+                try {
+                    const urlParams = new URLSearchParams(queryString);
+                    for (const [key, value] of urlParams) {
+                        params[key] = value;
+                    }
+                } catch(e) {
+                     console.error("Error parsing query string:", queryString, e);
+                }
+            }
+            return params;
+        }
 
-            init: function() {
-                this.imageOverlay = document.getElementById('modalOverlay'); // Use common overlay
+        // Utility function: Format Price with Commas
+        function addCommas(nStr) {
+            nStr += '';
+            const x = nStr.split('.');
+            let x1 = x[0];
+            const x2 = x.length > 1 ? '.' + x[1] : '';
+            const rgx = /(\d+)(\d{3})/;
+            while (rgx.test(x1)) {
+                x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            }
+            return x1 + x2;
+        }
+
+        // Utility function: Get Iconic Pagination Text
+        function getIconicPaginationText(originalText) {
+            const trimmedText = originalText.trim();
+            if (trimmedText === '>>') return '«';
+            if (trimmedText === '<') return '›';
+            if (trimmedText === '>') return '‹';
+            if (trimmedText === '<<') return '»';
+             if (/^\d+$/.test(trimmedText)) {
+                 return trimmedText;
+             }
+            return originalText;
+        }
+
+
+        // Image Modal Class
+        class ImageModal {
+            constructor() {
+                this.imageOverlay = document.getElementById('modalOverlay');
                 this.imageModal = document.getElementById('imageModal');
                 this.zoomedImage = document.getElementById('zoomedImage');
                 this.closeButton = document.getElementById('closeImageModalButton');
                 this.prevButton = document.getElementById('prevImageButton');
                 this.nextButton = document.getElementById('nextImageButton');
                 this.caption = document.getElementById('modalCaption');
-                this.spinner = document.getElementById('modalLoadingSpinner'); // Found here
+                this.spinner = document.getElementById('modalLoadingSpinner');
 
-                // Add event listeners
-                if (this.imageOverlay) this.imageOverlay.addEventListener('click', this.hide.bind(this)); // Add check
-                if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this)); // Add check - Close on modal background click
-                if (this.closeButton) this.closeButton.addEventListener('click', this.hide.bind(this)); // Add check
-                if (this.prevButton) this.prevButton.addEventListener('click', function(e){ e.stopPropagation(); this.showPrev(); }.bind(this)); // Add check
-                if (this.nextButton) this.nextButton.addEventListener('click', function(e){ e.stopPropagation(); this.showNext(); }.bind(this)); // Add check
+                this.currentGalleryImages = [];
+                this.currentImageIndex = 0;
+                this.currentDrugTitle = '';
+                this.originalFocusedElement = null; // For A11y focus trap
+
+                this.xDown = null; // For swipe tracking
+                this.yDown = null;
+
+                this.attachEventListeners();
+            }
+
+            attachEventListeners() {
+                // Add checks before adding listeners
+                if (this.imageOverlay) this.imageOverlay.addEventListener('click', this.hide.bind(this));
+                // It's better practice to attach close listeners only to dedicated close elements/overlay,
+                // not the whole modal content div if it contains interactive elements like the image itself.
+                // The image gets its own click listener below that calls hide.
+                // if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this));
+                if (this.closeButton) this.closeButton.addEventListener('click', this.hide.bind(this));
+                if (this.prevButton) this.prevButton.addEventListener('click', (e) => { e.stopPropagation(); this.showPrev(); });
+                if (this.nextButton) this.nextButton.addEventListener('click', (e) => { e.stopPropagation(); this.showNext(); });
+
+                 // Prevent clicks on image, spinner, caption from closing the modal via overlay click
+                if (this.zoomedImage) this.zoomedImage.addEventListener('click', (e) => { e.stopPropagation(); this.hide(); }); // Allow clicking image to close
+                if (this.spinner) this.spinner.addEventListener('click', (e) => { e.stopPropagation(); });
+                if (this.caption) this.caption.addEventListener('click', (e) => { e.stopPropagation(); });
 
 
-                 // Prevent clicks on image, nav buttons, spinner, caption from closing the modal via modal background click
-                if (this.zoomedImage) this.zoomedImage.addEventListener('click', function(e){ e.stopPropagation(); }); // Add check
-                if (this.spinner) this.spinner.addEventListener('click', function(e){ e.stopPropagation(); }); // Add check
-                if (this.caption) this.caption.addEventListener('click', function(e){ e.stopPropagation(); }); // Add check
-
-
-                // Add keyboard navigation (Escape, Left/Right arrows)
+                // Add keyboard navigation (Escape, Left/Right arrows, Focus Trap)
                 document.addEventListener('keydown', this.handleKeydown.bind(this));
 
                  // Add swipe gestures for touch devices
-                 if (this.imageModal) this.imageModal.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
-                 if (this.imageModal) this.imageModal.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
-                 if (this.imageModal) this.imageModal.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
-
-                 this.xDown = null; // For swipe tracking
-                 this.yDown = null;
-            },
-
-            handleTouchStart: function(evt) {
-                 // Use the first touch point
-                this.xDown = evt.touches[0].clientX;
-                this.yDown = evt.touches[0].clientY;
-            },
-
-            handleTouchMove: function(evt) {
-                // Prevent scrolling while swiping on the image area
-                 if (this.imageModal && this.imageModal.style.display === 'flex') { // Only if modal is open and element exists
-                    // Check if touchmove happened after touchstart
-                    if (this.xDown !== null && this.yDown !== null) {
-                        // Calculate the distance moved
-                        const xDiff = this.xDown - evt.touches[0].clientX;
-                        const yDiff = this.yDown - evt.touches[0].clientY;
-
-                        // If horizontal movement is greater than vertical movement, assume it's a swipe gesture
-                        if (Math.abs(xDiff) > Math.abs(yDiff)) {
-                            evt.preventDefault(); // Prevent vertical scrolling when trying to swipe horizontally
-                        }
-                    }
+                 if (this.imageModal) {
+                    this.imageModal.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
+                    this.imageModal.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
+                    this.imageModal.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
                  }
-            },
+            }
 
-            handleTouchEnd: function(evt) {
-                 if (this.imageModal && this.imageModal.style.display !== 'flex' || (!this.xDown && !this.yDown)) {
-                     return; // Only process if modal is open and touch started
+            handleTouchStart(evt) {
+                 if (!this.imageModal || this.imageModal.style.display !== 'flex') return;
+                 this.xDown = evt.touches[0].clientX;
+                 this.yDown = evt.touches[0].clientY;
+            }
+
+            handleTouchMove(evt) {
+                 if (!this.imageModal || this.imageModal.style.display !== 'flex' || (!this.xDown && !this.yDown)) {
+                     return;
                  }
+                 const xDiff = this.xDown - evt.touches[0].clientX;
+                 const yDiff = this.yDown - evt.touches[0].clientY;
+                 if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                    evt.preventDefault();
+                 }
+            }
 
+            handleTouchEnd(evt) {
+                 if (!this.imageModal || this.imageModal.style.display !== 'flex' || (!this.xDown && !this.yDown)) {
+                     return;
+                 }
                  const xUp = evt.changedTouches[0].clientX;
                  const yUp = evt.changedTouches[0].clientY;
-
                  const xDiff = this.xDown - xUp;
                  const yDiff = this.yDown - yUp;
-
-                 // Reset touch coordinates after processing
                  this.xDown = null;
                  this.yDown = null;
-
-                 const sensitivity = 50; // Minimum swipe distance in pixels
-
-                 if (Math.abs(xDiff) > Math.abs(yDiff)) { // Horizontal swipe
-                     if (Math.abs(xDiff) > sensitivity) { // Ensure it's a significant swipe
-                        if (xDiff > 0) { // Swiped left (in LTR terms) -> Show Next (in RTL UI)
-                            this.showNext();
-                        } else { // Swiped right (in LTR terms) -> Show Previous (in RTL UI)
-                            this.showPrev();
-                        }
-                     }
+                 const sensitivity = 50;
+                 if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > sensitivity) {
+                    if (xDiff > 0) { this.showNext(); } else { this.showPrev(); }
                  }
-                 // Vertical swipes are ignored
-            },
+            }
 
-
-            handleKeydown: function(event) {
-                if (this.imageModal && this.imageModal.style.display === 'flex') { // Only when image modal is open and element exists
-                     // Check if Escape key is pressed AND no other modal is open (like DetailModal, though we removed it)
-                     // This check might be needed if you add other modals later
-                     // if (event.key === 'Escape' /* && !DetailModal.isShowing() */) {
+            handleKeydown(event) {
+                if (this.imageModal && this.imageModal.style.display === 'flex') {
                     if (event.key === 'Escape') {
+                        event.preventDefault();
                         this.hide();
                     } else if (event.key === 'ArrowLeft') { // Left arrow (RTL prev)
-                         event.preventDefault(); // Prevent default browser scroll
+                         event.preventDefault();
                          this.showPrev();
                     } else if (event.key === 'ArrowRight') { // Right arrow (RTL next)
-                         event.preventDefault(); // Prevent default browser scroll
+                         event.preventDefault();
                          this.showNext();
+                    } else if (event.key === 'Tab') { // Focus trap
+                         this.handleFocusTrap(event);
                     }
                 }
-            },
+            }
+
+            handleFocusTrap(event) {
+                 if (!this.imageModal) return;
+
+                 const focusableElements = this.imageModal.querySelectorAll(
+                     'button:not([disabled]), [href]:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
+                 );
+                // Filter for elements that are actually visible
+                const visibleFocusableElements = Array.from(focusableElements).filter(el => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement);
 
 
-            show: function(galleryImages, drugTitle, initialIndex = 0) {
+                if (visibleFocusableElements.length === 0) return; // No focusable elements
+
+                 const firstFocusableElement = visibleFocusableElements[0];
+                 const lastFocusableElement = visibleFocusableElements[visibleFocusableElements.length - 1];
+
+                 if (event.shiftKey) { // Shift + Tab
+                     if (document.activeElement === firstFocusableElement) {
+                         lastFocusableElement.focus();
+                         event.preventDefault();
+                     }
+                 } else { // Tab
+                     if (document.activeElement === lastFocusableElement) {
+                         firstFocusableElement.focus();
+                         event.preventDefault();
+                     }
+                 }
+            }
+
+
+            show(galleryImages, drugTitle, initialIndex = 0) {
                 this.currentGalleryImages = galleryImages || [];
                 this.currentImageIndex = initialIndex;
                 this.currentDrugTitle = drugTitle || '';
 
-                 // Ensure elements exist before trying to access style
+                 // Ensure elements exist
                 if (!this.imageOverlay || !this.imageModal || !this.closeButton || !this.caption || !this.prevButton || !this.nextButton || !this.zoomedImage || !this.spinner) {
                      console.error("ImageModal elements not initialized correctly.");
                      return;
                 }
 
+                // Store the currently focused element before showing modal
+                this.originalFocusedElement = document.activeElement;
+
                 // Set initial display state
                 this.imageOverlay.style.display = 'block';
-                this.imageModal.style.display = 'flex'; // Use flex as per CSS
-                this.closeButton.classList.remove('dark'); // Ensure close button is light for dark overlay
+                this.imageModal.style.display = 'flex';
+                this.closeButton.classList.remove('dark');
                 this.closeButton.style.display = 'block';
-                this.caption.style.display = 'none'; // Will be shown after image loads
-                this.prevButton.style.display = 'none'; // Will be shown after image loads
+                this.caption.style.display = 'none';
+                this.prevButton.style.display = 'none';
                 this.nextButton.style.display = 'none';
 
 
@@ -966,16 +1106,19 @@
                     this.imageOverlay.style.opacity = 1;
                     this.imageModal.style.opacity = 1;
                     this.closeButton.style.opacity = 1;
+                    // Move focus to the modal itself or its first focusable element
+                    // Focusing the modal container is a common pattern for trapping focus
+                    this.imageModal.focus();
                 }, 10);
 
                 document.body.classList.add('modal-open'); // Prevent body scroll
 
                 // Load and display the first image
                 this.displayCurrent();
-            },
+            }
 
-            hide: function() {
-                 // Ensure elements exist before trying to access style
+            hide() {
+                 // Ensure elements exist
                  if (!this.imageOverlay || !this.imageModal || !this.closeButton || !this.caption || !this.prevButton || !this.nextButton || !this.zoomedImage || !this.spinner) {
                      console.error("ImageModal elements not initialized correctly, cannot hide.");
                      return;
@@ -986,8 +1129,9 @@
                 this.imageModal.style.opacity = 0;
                 this.closeButton.style.opacity = 0;
                 this.caption.style.opacity = 0;
-                this.prevButton.style.opacity = 0;
-                this.nextButton.style.opacity = 0;
+                if (this.prevButton) this.prevButton.style.opacity = 0; // Add check
+                if (this.nextButton) this.nextButton.style.opacity = 0; // Add check
+
 
                 // Hide elements after transition completes
                 setTimeout(() => {
@@ -995,8 +1139,9 @@
                     this.imageModal.style.display = 'none';
                     this.closeButton.style.display = 'none';
                     this.caption.style.display = 'none';
-                    this.prevButton.style.display = 'none';
-                    this.nextButton.style.display = 'none';
+                    if (this.prevButton) this.prevButton.style.display = 'none'; // Add check
+                    if (this.nextButton) this.nextButton.style.display = 'none'; // Add check
+
 
                     this.zoomedImage.src = ''; // Clear image src
                     this.zoomedImage.alt = '';
@@ -1008,10 +1153,16 @@
                     this.currentDrugTitle = '';
 
                     document.body.classList.remove('modal-open');
-                }, 300); // Match CSS transition duration
-            },
 
-            displayCurrent: function() {
+                    // Return focus to the element that was focused before the modal opened
+                    if (this.originalFocusedElement) {
+                        this.originalFocusedElement.focus();
+                        this.originalFocusedElement = null;
+                    }
+                }, 300); // Match CSS transition duration
+            }
+
+            displayCurrent() {
                  // Ensure elements exist
                 if (!this.zoomedImage || !this.spinner || !this.caption || !this.prevButton || !this.nextButton) {
                      console.error("ImageModal display elements not initialized correctly.");
@@ -1023,6 +1174,10 @@
                 this.caption.style.opacity = 0; // Hide caption
                 this.prevButton.style.opacity = 0; // Hide nav
                 this.nextButton.style.opacity = 0;
+
+                // Disable nav buttons while image is loading
+                 if (this.prevButton) this.prevButton.disabled = true;
+                 if (this.nextButton) this.nextButton.disabled = true;
 
 
                 if (this.currentGalleryImages.length > 0 && this.currentImageIndex >= 0 && this.currentImageIndex < this.currentGalleryImages.length) {
@@ -1048,9 +1203,11 @@
                              }
                               if (this.currentGalleryImages.length > 1) {
                                    // Use flex display for buttons with icon centering
-                                   if (this.prevButton) { this.prevButton.style.display = 'flex'; this.prevButton.style.opacity = 1; }
-                                   if (this.nextButton) { this.nextButton.style.display = 'flex'; this.nextButton.style.opacity = 1; }
+                                   if (this.prevButton) { this.prevButton.style.display = 'flex'; this.prevButton.style.opacity = 1; this.prevButton.disabled = false; }
+                                   if (this.nextButton) { this.nextButton.style.display = 'flex'; this.nextButton.style.opacity = 1; this.nextButton.disabled = false; }
                               }
+                             // Preload next/prev images
+                             this.preloadImages();
                          }, 50);
 
                     };
@@ -1064,6 +1221,11 @@
                          }
                          if (this.prevButton) this.prevButton.style.display = 'none';
                          if (this.nextButton) this.nextButton.style.display = 'none';
+
+                         // Ensure nav buttons are enabled (or hidden) even on error
+                         if (this.prevButton) this.prevButton.disabled = false;
+                         if (this.nextButton) this.nextButton.disabled = false;
+
                          console.error('Failed to load image:', imageUrl);
                     };
                     tempImg.src = imageUrl; // Start loading
@@ -1076,99 +1238,179 @@
                     if (this.prevButton) this.prevButton.style.display = 'none';
                     if (this.nextButton) this.nextButton.style.display = 'none';
                     if (this.spinner) this.spinner.style.display = 'none';
-                }
-            },
 
-            showNext: function() {
+                    // Ensure nav buttons are disabled if no images
+                    if (this.prevButton) this.prevButton.disabled = true;
+                    if (this.nextButton) this.nextButton.disabled = true;
+                }
+            }
+
+            showNext() {
                  if (this.currentGalleryImages.length <= 1) return;
                  this.currentImageIndex = (this.currentImageIndex + 1) % this.currentGalleryImages.length;
                  this.displayCurrent();
-            },
+            }
 
-            showPrev: function() {
+            showPrev() {
                  if (this.currentGalleryImages.length <= 1) return;
                  this.currentImageIndex = (this.currentImageIndex - 1 + this.currentGalleryImages.length) % this.currentGalleryImages.length;
                  this.displayCurrent();
             }
-        };
+
+             // Preloading
+             preloadImages() {
+                 if (this.currentGalleryImages.length <= 1) return;
+                 const nextIndex = (this.currentImageIndex + 1) % this.currentGalleryImages.length;
+                 const prevIndex = (this.currentImageIndex - 1 + this.currentGalleryImages.length) % this.currentGalleryImages.length;
+
+                 // Preload next image
+                 const nextImg = new Image();
+                 nextImg.src = this.currentGalleryImages[nextIndex];
+                 // console.log('Preloading next image:', nextImg.src);
+
+                 // Preload previous image
+                 const prevImg = new Image();
+                 prevImg.src = this.currentGalleryImages[prevIndex];
+                 // console.log('Preloading previous image:', prevImg.src);
+             }
+        }
 
 
-        // Removed DetailModal object entirely (as requested to revert action)
-
-
-        const SearchApp = {
-            searchForm: null,
-            termInput: null,
-            resultDiv: null,
-             mainLoadingSpinner: null, // Will hold reference to dynamically created spinner
-             initialMessage: null,
-             corsWarning: null,
-
-             // State variables for sorting
-             currentSortKey: 'none', // e.g., 'price'
-             currentSortDirection: 'asc', // 'asc' or 'desc'
-
-
-            targetBaseUrl: 'https://irc.fda.gov.ir',
-            searchEndpoint: '/nfi/Search',
-
-            init: function() {
+        // Search Application Class
+        class SearchApp {
+            constructor() {
                 this.searchForm = document.querySelector('#subscribe .subscribe-inputs1 form');
                 this.termInput = document.getElementById('Term');
+                this.clearInputButton = document.getElementById('clearInput');
                 this.resultDiv = document.getElementById('simulationResult');
-                 // No static mainLoadingSpinner
-                 this.initialMessage = document.getElementById('initialMessage');
-                 this.corsWarning = document.getElementById('corsWarning');
+                this.initialMessage = document.getElementById('initialMessage');
+                this.corsWarning = document.getElementById('corsWarning');
+                 this.mainLoadingSpinner = null;
 
+                 this.currentSortKey = 'none';
+                 this.currentSortDirection = 'asc';
 
-                // Initialize only ImageModal
-                ImageModal.init();
+                this.targetBaseUrl = 'https://irc.fda.gov.ir';
+                this.searchEndpoint = '/nfi/Search';
 
-                // Attach main event listeners
+                // Create instance of ImageModal
+                this.ImageModal = new ImageModal();
+
                 this.attachEventListeners();
+                 this.handleInitialState();
+                 this.handleInputDirection();
 
-                 // Handle initial state of input direction
-                if (this.termInput) {
-                    this.handleInputDirection(); // Set initial direction
-                    this.termInput.addEventListener('input', this.handleInputDirection.bind(this)); // Add listener for changes
-                }
+                 // Debounce the input event listener
+                 if (this.termInput) {
+                    const debouncedInputHandler = debounce(this.handleInputDirection.bind(this), 250);
+                    this.termInput.addEventListener('input', debouncedInputHandler);
 
-                 // Initially show messages
-                 if (this.initialMessage) this.initialMessage.style.display = 'block';
-                 if (this.corsWarning) this.corsWarning.style.display = 'block';
-            },
+                    // Show/hide clear button based on input value
+                     this.termInput.addEventListener('input', this.toggleClearButton.bind(this));
+                     this.toggleClearButton(); // Call initially
+                 }
+                 if (this.clearInputButton) {
+                    this.clearInputButton.addEventListener('click', this.handleClearInput.bind(this));
+                 }
 
-             // New method to handle input direction based on characters
-            handleInputDirection: function() {
+                 // Handle browser back/forward button (History API)
+                 window.addEventListener('popstate', this.handlePopState.bind(this));
+            }
+
+             handleInitialState() {
+                 // Check URL parameters on page load
+                 const urlParams = getQueryParams(window.location.search);
+                 const initialTerm = urlParams['Term'] || '';
+                 const initialPage = urlParams['PageNumber'] ? parseInt(urlParams['PageNumber']) : 1;
+                 // Note: Initial sort from URL is not implemented in this version
+
+                 if (initialTerm) {
+                     if (this.termInput) this.termInput.value = initialTerm;
+                     this.performSearch(initialTerm, initialPage, false); // Perform search but don't push state again
+                 } else {
+                    // Show initial messages if no term in URL
+                     if (this.initialMessage) this.initialMessage.style.display = 'block';
+                     if (this.corsWarning) this.corsWarning.style.display = 'block';
+                 }
+             }
+
+             handlePopState(event) {
+                // Handle browser back/forward buttons
+                 console.log("Popstate triggered", event.state);
+                 const state = event.state;
+
+                 if (state && state.term) {
+                     // Update input and perform search based on history state
+                     if (this.termInput) this.termInput.value = state.term;
+                     this.performSearch(state.term, state.page || 1, false); // Don't push state again
+                 } else {
+                    // If no state (e.g., back to initial page), clear results and show initial message
+                     if (this.resultDiv) this.resultDiv.innerHTML = '';
+                     if (this.initialMessage) this.initialMessage.style.display = 'block';
+                     if (this.corsWarning) this.corsWarning.style.display = 'block';
+                     if (this.termInput) this.termInput.value = '';
+                     // Reset sort state? Depends on desired behavior
+                     this.currentSortKey = 'none';
+                     this.currentSortDirection = 'asc';
+                 }
+             }
+
+
+             // Handle input direction based on characters
+            handleInputDirection() {
                 if (!this.termInput) return;
-
                 const value = this.termInput.value;
-                // Regex to check for common Arabic/Persian characters (Unicode range \u0600-\u06FF)
                 const rtlRegex = /[\u0600-\u06FF]/;
-
                 if (rtlRegex.test(value)) {
-                    // Contains RTL characters
                     this.termInput.style.direction = 'rtl';
                     this.termInput.style.textAlign = 'right';
                 } else {
-                    // No RTL characters found, default to LTR
                     this.termInput.style.direction = 'ltr';
                     this.termInput.style.textAlign = 'left';
                 }
-            },
+            }
+
+             // Show/hide clear button based on input value
+             toggleClearButton() {
+                 if (this.clearInputButton && this.termInput) {
+                     if (this.termInput.value.length > 0) {
+                         this.clearInputButton.style.display = 'block';
+                     } else {
+                         this.clearInputButton.style.display = 'none';
+                     }
+                 }
+             }
+
+             // Handle click on clear button
+             handleClearInput() {
+                 if (this.termInput) {
+                     this.termInput.value = ''; // Clear the input
+                     this.handleInputDirection(); // Reset direction
+                     this.toggleClearButton(); // Hide button
+
+                     // Reset the view to the initial state
+                     if (this.resultDiv) this.resultDiv.innerHTML = '';
+                     if (this.initialMessage) this.initialMessage.style.display = 'block';
+                     if (this.corsWarning) this.corsWarning.style.display = 'block';
+                      // Reset sort state
+                     this.currentSortKey = 'none';
+                     this.currentSortDirection = 'asc';
 
 
-            attachEventListeners: function() {
+                     // Update history to initial state URL
+                     history.pushState({}, '', window.location.pathname);
+                 }
+             }
+
+
+            attachEventListeners() {
                  if (this.searchForm) this.searchForm.addEventListener('submit', this.handleSearchSubmit.bind(this));
 
                  // Event Delegation for dynamically added content inside resultDiv
-                 // This will now handle image clicks, suggestion clicks, AND sort button clicks
                  if (this.resultDiv) this.resultDiv.addEventListener('click', this.handleResultAreaClick.bind(this));
+            }
 
-                 // Pagination link listeners are attached after rendering in renderResults
-            },
-
-             handleSearchSubmit: function(event) {
+             handleSearchSubmit(event) {
                 event.preventDefault();
                 const searchTerm = this.termInput ? this.termInput.value.trim() : '';
 
@@ -1186,19 +1428,16 @@
                  this.currentSortDirection = 'asc';
 
                 this.performSearch(searchTerm); // Start search from page 1
-            },
+            }
 
-            handleResultAreaClick: async function(event) {
-                 // Use .closest to check if the clicked element or any of its ancestors match the selector
+            handleResultAreaClick(event) {
                  const clickedImageContainer = event.target.closest('.drug-card .card-image');
-                 // Removed detail link check as it's no longer intercepted by JS
-                 // const clickedDetailLink = event.target.closest('.drug-card .detail-link');
                  const clickedSuggestionLink = event.target.closest('.suggestions-list a');
-                 const clickedSortButton = event.target.closest('.sort-controls button'); // Check for sort buttons
+                 const clickedSortButton = event.target.closest('.sort-controls button');
                  // Pagination links are handled by their specific listeners attached after rendering
 
                  if (clickedImageContainer) {
-                    event.preventDefault(); // Prevent default link/button behavior if image is inside one
+                    event.preventDefault();
                     const detailUrl = clickedImageContainer.getAttribute('data-detail-url');
                     const drugTitle = clickedImageContainer.getAttribute('data-drug-title');
 
@@ -1207,10 +1446,10 @@
                         return;
                     }
                      // Fetch images from detail page and show image modal
-                    await this.fetchAndShowImageModal(detailUrl, drugTitle);
+                    this.fetchAndShowImageModal(detailUrl, drugTitle);
 
                  } else if (clickedSuggestionLink) {
-                     event.preventDefault(); // Prevent navigating away
+                     event.preventDefault();
                      const suggestedTerm = clickedSuggestionLink.getAttribute('data-suggested-term');
                      if (suggestedTerm && this.termInput) {
                          this.termInput.value = suggestedTerm;
@@ -1219,15 +1458,13 @@
                          console.error("Could not get suggested term from link data attribute or termInput not found.");
                      }
                  } else if (clickedSortButton) {
-                     // Handle sort button click
                      const sortKey = clickedSortButton.getAttribute('data-sort-key');
                      const sortDirection = clickedSortButton.getAttribute('data-sort-direction');
 
                      if (sortKey && sortDirection) {
                          this.currentSortKey = sortKey;
                          this.currentSortDirection = sortDirection;
-                         this.sortResults(sortKey, sortDirection); // Perform sorting on the current results
-                         // Update active button classes
+                         this.sortResults(sortKey, sortDirection);
                          this.resultDiv.querySelectorAll('.sort-controls button').forEach(btn => {
                              btn.classList.remove('active');
                          });
@@ -1237,46 +1474,44 @@
                      }
                  }
                  // Clicks on .detail-link and .pagination a are not intercepted here
-            },
+            }
 
-             fetchAndShowImageModal: async function(detailUrl, drugTitle) {
+             async fetchAndShowImageModal(detailUrl, drugTitle) {
                  // Immediately show loading state in the modal area
-                 if (ImageModal.spinner) ImageModal.spinner.style.display = 'block';
-                 ImageModal.show(); // Show modal container with spinner
+                 if (this.ImageModal.spinner) this.ImageModal.spinner.style.display = 'block';
+                 this.ImageModal.show(); // Show modal container with spinner
 
                  // Hide nav/caption/image while loading
-                 if (ImageModal.caption) ImageModal.caption.style.display = 'none';
-                 if (ImageModal.prevButton) ImageModal.prevButton.style.display = 'none';
-                 if (ImageModal.nextButton) ImageModal.nextButton.style.display = 'none';
-                 if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
+                 if (this.ImageModal.caption) this.ImageModal.caption.style.display = 'none';
+                 if (this.ImageModal.prevButton) this.ImageModal.prevButton.style.display = 'none';
+                 if (this.ImageModal.nextButton) this.ImageModal.nextButton.style.display = 'none';
+                 if (this.ImageModal.zoomedImage) this.ImageModal.zoomedImage.style.display = 'none';
 
                  try {
-                     // --- FIX: Read response text BEFORE checking response.ok ---
                      const detailResponse = await fetch(detailUrl);
-                     const detailHtmlString = await detailResponse.text(); // Read text here
+                     // --- FIX: Read response text BEFORE checking response.ok ---
+                     const detailHtmlString = await detailResponse.text();
 
                      if (!detailResponse.ok) {
                           let errorDetail = `Status: ${detailResponse.status}`;
                            errorDetail += ` - ${detailResponse.statusText}`;
-                           let responseTextSample = detailHtmlString.substring(0, 200); // Use the text we already read
+                           let responseTextSample = detailHtmlString.substring(0, 200);
                            throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
                      }
 
                      const parser = new DOMParser();
                      const detailDoc = parser.parseFromString(detailHtmlString, 'text/html');
 
-                     // Find all gallery image links on the detail page
                      const galleryLinks = detailDoc.querySelectorAll('.searchBox1 a[data-lightbox="image-1"], .alignBtn a[data-lightbox="image-1"]');
 
                      const fetchedImageUrls = [];
                      galleryLinks.forEach(link => {
                          const href = link.getAttribute('href');
                          if (href) {
-                             // Ensure absolute URL
                             if (href.startsWith('/')) {
                                 fetchedImageUrls.push(`${this.targetBaseUrl}${href}`);
                             } else {
-                                fetchedImageUrls.push(href); // Assume already absolute if it doesn't start with '/'
+                                fetchedImageUrls.push(href);
                             }
                          }
                      });
@@ -1284,43 +1519,41 @@
                      console.log(`Found ${fetchedImageUrls.length} gallery images on detail page.`);
 
                      if (fetchedImageUrls.length > 0) {
-                          ImageModal.show(fetchedImageUrls, drugTitle, 0); // Show the modal with the fetched images, start at index 0
+                          this.ImageModal.show(fetchedImageUrls, drugTitle, 0);
                      } else {
-                         // If no images found on detail page, display a message within the modal area
-                          if (ImageModal.spinner) ImageModal.spinner.style.display = 'none';
-                          if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
-                         if (ImageModal.caption) {
-                             ImageModal.caption.textContent = 'عکسی در صفحه جزئیات یافت نشد.';
-                             ImageModal.caption.style.display = 'block';
-                             ImageModal.caption.style.opacity = 1;
+                          if (this.ImageModal.spinner) this.ImageModal.spinner.style.display = 'none';
+                          if (this.ImageModal.zoomedImage) this.ImageModal.zoomedImage.style.display = 'none';
+                         if (this.ImageModal.caption) {
+                             this.ImageModal.caption.textContent = 'عکسی در صفحه جزئیات یافت نشد.';
+                             this.ImageModal.caption.style.display = 'block';
+                             this.ImageModal.caption.style.opacity = 1;
                          }
-                         if (ImageModal.prevButton) ImageModal.prevButton.style.display = 'none';
-                         if (ImageModal.nextButton) ImageModal.nextButton.style.display = 'none';
+                         if (this.ImageModal.prevButton) this.ImageModal.prevButton.style.display = 'none';
+                         if (this.ImageModal.nextButton) this.ImageModal.nextButton.style.display = 'none';
 
-                         // Keep modal open to show the "not found" message
-                         ImageModal.currentGalleryImages = [];
-                         ImageModal.currentImageIndex = 0;
+                         this.ImageModal.currentGalleryImages = [];
+                         this.ImageModal.currentImageIndex = 0;
                      }
 
                  } catch (detailError) {
                      console.error('Error fetching or parsing detail page for images:', detailError);
-                      if (ImageModal.spinner) ImageModal.spinner.style.display = 'none';
-                      if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
-                     if (ImageModal.caption) {
-                         ImageModal.caption.textContent = `خطا در دریافت جزئیات عکس: ${detailError.message}`;
-                         ImageModal.caption.style.display = 'block';
-                         ImageModal.caption.style.opacity = 1;
+                      if (this.ImageModal.spinner) this.ImageModal.spinner.style.display = 'none';
+                      if (this.ImageModal.zoomedImage) this.ImageModal.zoomedImage.style.display = 'none';
+                     if (this.ImageModal.caption) {
+                         this.ImageModal.caption.textContent = `خطا در دریافت جزئیات عکس: ${detailError.message}`;
+                         this.ImageModal.caption.style.display = 'block';
+                         this.ImageModal.caption.style.opacity = 1;
                      }
-                     if (ImageModal.prevButton) ImageModal.prevButton.style.display = 'none';
-                     if (ImageModal.nextButton) ImageModal.nextButton.style.display = 'none';
+                     if (this.ImageModal.prevButton) this.ImageModal.prevButton.style.display = 'none';
+                     if (this.ImageModal.nextButton) this.ImageModal.nextButton.style.display = 'none';
 
-                     ImageModal.currentGalleryImages = [];
-                     ImageModal.currentImageIndex = 0;
+                     this.ImageModal.currentGalleryImages = [];
+                     this.ImageModal.currentImageIndex = 0;
                  }
-             },
+             }
 
 
-            performSearch: async function(searchTerm, pageNumber = 1, pageSize = 10) {
+            performSearch(searchTerm, pageNumber = 1, pushState = true) { // Removed pageSize from signature, use default in URL
                  // Ensure resultDiv exists
                  if (!this.resultDiv) {
                      console.error("SearchApp resultDiv not initialized.");
@@ -1329,6 +1562,10 @@
 
                  // Clear previous content
                 this.resultDiv.innerHTML = '';
+                // Hide initial messages if they are visible
+                if (this.initialMessage) this.initialMessage.style.display = 'none';
+                if (this.corsWarning) this.corsWarning.style.display = 'none';
+
 
                 // Add the main loading spinner dynamically
                  const mainSpinnerElement = document.createElement('div');
@@ -1337,64 +1574,82 @@
                  this.mainLoadingSpinner = mainSpinnerElement; // Update reference
 
                  this.resultDiv.className = 'loading-container'; // Add class for centering spinner
-                 if(this.mainLoadingSpinner) this.mainLoadingSpinner.style.display = 'block'; // Add check
+                 if(this.mainLoadingSpinner) this.mainLoadingSpinner.style.display = 'block';
 
 
-                const encodedSearchTerm = encodeURIComponent(searchTerm);
-                const targetUrl = `${this.targetBaseUrl}${this.searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
+                 // Use default pageSize (10) based on site behavior
+                 const pageSize = 10;
+                 const encodedSearchTerm = encodeURIComponent(searchTerm);
+                 const targetUrl = `${this.targetBaseUrl}${this.searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
-                console.log(`Attempting to fetch search results from: ${targetUrl}`);
+                 console.log(`Attempting to fetch search results from: ${targetUrl}`);
 
-                try {
-                    const response = await fetch(targetUrl);
+                 // Update URL using History API (only if pushState is true)
+                 if (pushState) {
+                     const urlParams = new URLSearchParams();
+                     urlParams.set('Term', searchTerm);
+                     if (pageNumber !== 1) urlParams.set('PageNumber', pageNumber);
+                     // Note: Not adding sort state to URL for simplicity, but possible
 
-                    // --- FIX: Read response text BEFORE checking response.ok ---
-                    const htmlString = await response.text(); // Read text here
-
-                    if (!response.ok) {
-                         let errorDetail = `Status: ${response.status}`;
-                           errorDetail += ` - ${response.statusText}`;
-                           let responseTextSample = htmlString.substring(0, 200); // Use the text we already read
-                           throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
-                    }
-
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlString, 'text/html');
-
-                    const resultItems = doc.querySelectorAll('.RowSearchSty');
-                    let paginationElement = doc.querySelector('.pagination');
-                    const noResultsTitleElement = doc.querySelector('.txtSearchTitle1');
-                    const suggestionLinks = doc.querySelectorAll('.titleNotFind a');
+                     const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                     history.pushState({ term: searchTerm, page: pageNumber, pageSize: pageSize }, '', newUrl);
+                     console.log("Pushed history state:", history.state);
+                 }
 
 
-                    // --- Render Results or No Results ---
-                     // Clear spinner now BEFORE rendering new content
-                    if (this.mainLoadingSpinner && this.mainLoadingSpinner.parentElement === this.resultDiv) {
-                        this.mainLoadingSpinner.remove(); // Remove the spinner element
-                    }
-                    this.resultDiv.classList.remove('loading-container'); // Remove centering class
+                fetch(targetUrl)
+                    .then(response => {
+                        return response.text().then(text => {
+                            if (!response.ok) {
+                                let errorDetail = `Status: ${response.status}`;
+                                errorDetail += ` - ${response.statusText}`;
+                                let responseTextSample = text.substring(0, 200);
+                                throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
+                            }
+                            return text;
+                        });
+                    })
+                    .then(htmlString => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlString, 'text/html');
+
+                        const resultItems = doc.querySelectorAll('.RowSearchSty');
+                        let paginationElement = doc.querySelector('.pagination');
+                        const noResultsTitleElement = doc.querySelector('.txtSearchTitle1');
+                        const suggestionLinks = doc.querySelectorAll('.titleNotFind a');
 
 
-                    if (noResultsTitleElement && suggestionLinks.length > 0 && resultItems.length === 0) {
-                         this.renderNoResults(noResultsTitleElement, suggestionLinks);
-                    } else if (resultItems.length > 0) {
-                         this.renderResults(resultItems, paginationElement);
-                    } else {
-                         this.renderGenericNoResults();
-                    }
+                        // --- Render Results or No Results ---
+                         // Clear spinner now BEFORE rendering new content
+                        if (this.mainLoadingSpinner && this.mainLoadingSpinner.parentElement === this.resultDiv) {
+                            this.mainLoadingSpinner.remove();
+                        }
+                        this.resultDiv.classList.remove('loading-container');
 
 
-                } catch (error) {
-                    this.renderError(error);
-                } finally {
-                     // Ensure spinner is removed and class is removed even if an error occurred after initial fetch
-                    const currentSpinner = this.resultDiv.querySelector('.spinner'); // Find by class
-                     if(currentSpinner) currentSpinner.remove();
-                    this.resultDiv.classList.remove('loading-container');
-                }
-            },
+                        if (noResultsTitleElement && suggestionLinks.length > 0 && resultItems.length === 0) {
+                             this.renderNoResults(noResultsTitleElement, suggestionLinks);
+                        } else if (resultItems.length > 0) {
+                             this.renderResults(resultItems, paginationElement);
+                              // Scroll to top after rendering results
+                             window.scrollTo({ top: 0, behavior: 'smooth' });
+                        } else {
+                             this.renderGenericNoResults();
+                        }
 
-             renderResults: function(resultItems, paginationElement) {
+                    })
+                    .catch(error => {
+                        this.renderError(error);
+                    })
+                    .finally(() => {
+                         // Ensure spinner is removed and class is removed even if an error occurred after initial fetch
+                        const currentSpinner = this.resultDiv.querySelector('.spinner');
+                         if(currentSpinner) currentSpinner.remove();
+                        this.resultDiv.classList.remove('loading-container');
+                    });
+            }
+
+             renderResults(resultItems, paginationElement) {
                  console.log(`Detected ${resultItems.length} search results.`);
                  let resultsHtml = '<h3 style="color: #1f3a65; margin-bottom: 30px; text-align: center;">نتایج جستجو:</h3>';
 
@@ -1402,13 +1657,13 @@
                  resultsHtml += `
                      <div class="sort-controls">
                          <span>مرتب‌سازی بر اساس قیمت:</span>
-                         <button data-sort-key="price" data-sort-direction="asc">صعودی</button>
-                         <button data-sort-key="price" data-sort-direction="desc">نزولی</button>
+                         <button data-sort-key="price" data-sort-direction="asc" aria-label="مرتب سازی صعودی قیمت">صعودی</button>
+                         <button data-sort-key="price" data-sort-direction="desc" aria-label="مرتب سازی نزولی قیمت">نزولی</button>
                      </div>
                  `;
 
 
-                 resultsHtml += '<ul id="resultsList" class="results-list">'; // Added ID to the UL
+                 resultsHtml += '<ul id="resultsList" class="results-list">';
 
                 resultItems.forEach(item => {
                     // --- Extract Data ---
@@ -1430,7 +1685,7 @@
                     const imageAlt = imageElement ? imageElement.getAttribute('alt') || persianTitle : persianTitle;
 
                     let details = {};
-                    let rawPrice = '0'; // Initialize raw price
+                    let rawPrice = '0';
                     const detailRows = item.querySelectorAll('.searchRow > .row');
                     detailRows.forEach(row => {
                         const columns = row.querySelectorAll('.col-lg-4, .col-md-4, col-sm-6, col-xs-12');
@@ -1443,8 +1698,8 @@
                                 if (labelText.includes('صاحب برند')) details.brandOwner = valueText;
                                 else if (labelText.includes('صاحب پروانه')) details.licenseHolder = valueText;
                                 else if (labelText.includes('قیمت هر بسته')) {
-                                     rawPrice = valueText; // Store raw price before formatting
-                                     details.price = addCommas(valueText); // Store formatted price for display
+                                     rawPrice = valueText;
+                                     details.price = addCommas(valueText);
                                 }
                                 else if (labelText.includes('بسته بندی')) details.packaging = valueText;
                                 else if (labelText.includes('کد فرآورده')) details.productCode = valueText;
@@ -1484,7 +1739,7 @@
 
                                     <!-- Link href is the absolute URL, target="_blank" opens in new tab -->
                                     <!-- Styling is applied via the CSS class .detail-link -->
-                                    <a href="${absoluteDetailLink}" target="_blank" class="detail-link">مشاهده جزئیات در سایت اصلی</a>
+                                    <a href="${absoluteDetailLink}" target="_blank" class="detail-link" aria-label="مشاهده جزئیات ${persianTitle} در سایت اصلی">مشاهده جزئیات در سایت اصلی</a>
                                 </div>
                             </div>
                         </li>
@@ -1511,10 +1766,19 @@
                         const paginationLinkParams = getQueryParams(absoluteLinkHref);
                         const termForPagination = paginationLinkParams['Term'] || currentTerm;
 
+                        // Determine if this is the active page link
+                        const isActive = link.parentElement.classList.contains('active');
 
                         resultsHtml += `
                             <li class="${linkClass}">
-                                <a href="#" data-page="${pageNum}" data-term="${termForPagination}">${buttonText}</a>
+                                <a href="#"
+                                   data-page="${pageNum}"
+                                   data-term="${termForPagination}"
+                                   ${isActive ? 'aria-current="page"' : ''}
+                                   aria-label="صفحه ${pageNum} ${isActive ? 'فعلی' : ''}"
+                                   tabindex="${isActive ? '-1' : '0'}">
+                                    ${buttonText}
+                                </a>
                             </li>`;
                     });
                    resultsHtml += '</ul></div>';
@@ -1522,14 +1786,15 @@
 
                  // Update the DOM
                 this.resultDiv.innerHTML = resultsHtml;
-                // this.resultDiv.className = ''; // Already removed loading/error classes
 
 
                  // --- AFTER rendering, re-attach event listeners and apply initial/current sort ---
 
                  // Re-attach event listeners to the new pagination links
+                 // These listeners should still trigger performSearch, NOT default link action
                  if (this.resultDiv.querySelector('.pagination')) {
                      this.resultDiv.querySelectorAll('.pagination a').forEach(link => {
+                          // Check if listener is already attached? No, innerHTML replaces, so always attach
                           link.addEventListener('click', function(e) {
                               e.preventDefault(); // Prevent default link behavior
                               const page = this.getAttribute('data-page');
@@ -1551,35 +1816,32 @@
                      const activeBtn = this.resultDiv.querySelector(`.sort-controls button[data-sort-key="${this.currentSortKey}"][data-sort-direction="${this.currentSortDirection}"]`);
                      if (activeBtn) activeBtn.classList.add('active');
                  }
-            },
+            }
 
             // Method to sort the displayed results
-             sortResults: function(sortKey, sortDirection) {
+             sortResults(sortKey, sortDirection) {
                  const resultsListUl = this.resultDiv.querySelector('#resultsList');
                  if (!resultsListUl) {
                      console.warn("Results list UL not found for sorting.");
                      return;
                  }
 
-                 const listItems = Array.from(resultsListUl.querySelectorAll('li')); // Get all LI elements as an array
+                 const listItems = Array.from(resultsListUl.querySelectorAll('li'));
 
                  listItems.sort((a, b) => {
                      let aValue, bValue;
 
-                     // Get value based on sortKey
                      if (sortKey === 'price') {
-                         // Get the raw price from the data attribute
                          const aPriceStr = a.querySelector('.drug-card')?.getAttribute('data-raw-price') || '0';
                          const bPriceStr = b.querySelector('.drug-card')?.getAttribute('data-raw-price') || '0';
-                         aValue = parseFloat(aPriceStr.replace(/,/g, '')); // Parse as number, remove commas
+                         aValue = parseFloat(aPriceStr.replace(/,/g, ''));
                          bValue = parseFloat(bPriceStr.replace(/,/g, ''));
 
-                         // Handle potential NaN from parsing errors or missing data
                          if (isNaN(aValue)) aValue = 0;
                          if (isNaN(bValue)) bValue = 0;
 
                      }
-                     // Add other sort keys here if needed later
+                     // Add other sort keys here
 
                      let comparison = 0;
                      if (aValue > bValue) {
@@ -1588,7 +1850,6 @@
                          comparison = -1;
                      }
 
-                     // Apply direction
                      if (sortDirection === 'desc') {
                          comparison = comparison * -1;
                      }
@@ -1596,8 +1857,6 @@
                      return comparison;
                  });
 
-                 // Re-append sorted list items to the UL
-                 // This uses document fragment for potentially better performance with many items
                  const fragment = document.createDocumentFragment();
                  listItems.forEach(item => {
                      fragment.appendChild(item);
@@ -1605,10 +1864,10 @@
                  resultsListUl.appendChild(fragment);
 
                  console.log(`Results sorted by ${sortKey} ${sortDirection}.`);
-             },
+             }
 
 
-             renderNoResults: function(noResultsTitleElement, suggestionLinks) {
+             renderNoResults(noResultsTitleElement, suggestionLinks) {
                  console.log("Detected no results and suggestions.");
                  const noResultsMessage = noResultsTitleElement.textContent.trim();
                  let resultsHtml = `
@@ -1631,15 +1890,15 @@
                  resultsHtml += `</ul></div>`;
 
                  this.resultDiv.innerHTML = resultsHtml;
-             },
+             }
 
-             renderGenericNoResults: function() {
+             renderGenericNoResults() {
                  console.log("No search results or suggestion structure found.");
                  this.resultDiv.innerHTML = '<p style="text-align: center;">نتیجه‌ای برای جستجوی شما یافت نشد.</p>';
-             },
+             }
 
 
-             renderError: function(error) {
+             renderError(error) {
                 console.error('Search failed:', error);
                 let errorMessage = '<p style="color: red;">مشکل در دریافت یا پردازش نتایج جستجو.</p>';
 
@@ -1657,51 +1916,6 @@
                 this.resultDiv.innerHTML = errorMessage;
                 this.resultDiv.className = 'error';
             }
-        };
-
-
-        // Utility function (can remain global or nested)
-        function getQueryParams(url) {
-            const queryStartIndex = url.indexOf('?');
-            if (queryStartIndex === -1) return {};
-
-            const params = {};
-            const queryString = url.substring(queryStartIndex + 1);
-            if (queryString) {
-                try {
-                    const urlParams = new URLSearchParams(queryString);
-                    for (const [key, value] of urlParams) {
-                        params[key] = value;
-                    }
-                } catch(e) {
-                     console.error("Error parsing query string:", queryString, e);
-                }
-            }
-            return params;
-        }
-
-        function addCommas(nStr) {
-            nStr += '';
-            const x = nStr.split('.');
-            let x1 = x[0];
-            const x2 = x.length > 1 ? '.' + x[1] : '';
-            const rgx = /(\d+)(\d{3})/;
-            while (rgx.test(x1)) {
-                x1 = x1.replace(rgx, '$1' + ',' + '$2');
-            }
-            return x1 + x2;
-        }
-
-        function getIconicPaginationText(originalText) {
-            const trimmedText = originalText.trim();
-            if (trimmedText === '>>') return '«';
-            if (trimmedText === '<') return '›';
-            if (trimmedText === '>') return '‹';
-            if (trimmedText === '<<') return '»';
-             if (/^\d+$/.test(trimmedText)) {
-                 return trimmedText;
-             }
-            return originalText;
         }
 
 
@@ -1709,7 +1923,21 @@
         document.addEventListener('DOMContentLoaded', function() {
              // Small delay to ensure all DOM elements are truly ready, just in case
              setTimeout(() => {
-                 SearchApp.init();
+                 // Ensure core elements exist before initializing SearchApp
+                 const searchForm = document.querySelector('#subscribe .subscribe-inputs1 form');
+                 const termInput = document.getElementById('Term');
+                 const resultDiv = document.getElementById('simulationResult');
+                 const modalOverlay = document.getElementById('modalOverlay');
+                 const imageModal = document.getElementById('imageModal');
+                 const closeImageButton = document.getElementById('closeImageModalButton');
+
+
+                 if (searchForm && termInput && resultDiv && modalOverlay && imageModal && closeImageButton) {
+                      window.SearchApp = new SearchApp(); // Make it global for easy access
+                 } else {
+                     console.error("FATAL ERROR: Core application elements not found. Check HTML structure.");
+                 }
+
              }, 50);
 
         });
