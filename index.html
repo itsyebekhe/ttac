@@ -572,6 +572,34 @@
              pointer-events: none;
         }
 
+        /* Sorting Controls Styling */
+        .sort-controls {
+            margin-bottom: 20px;
+            text-align: left; /* Align controls to the left in RTL */
+        }
+         .sort-controls button {
+             padding: 8px 15px;
+             margin-left: 10px; /* Space between buttons in RTL */
+             background-color: #e9ecef;
+             border: 1px solid #ced4da;
+             border-radius: 4px;
+             font-size: 0.9rem;
+             cursor: pointer;
+             transition: background-color 0.2s ease, border-color 0.2s ease;
+             font-family: Vazirmatn, sans-serif;
+         }
+         .sort-controls button:hover {
+             background-color: #dee2e6;
+             border-color: #adb5bd;
+         }
+         .sort-controls button.active {
+             background-color: #007bff;
+             color: white;
+             border-color: #007bff;
+             font-weight: bold;
+         }
+
+
         /* Responsive adjustments */
         @media (max-width: 992px) {
              .drug-card .card-image {
@@ -592,6 +620,8 @@
              }
              /* Removed detail modal responsive padding */
              /* #detailModal { padding: 20px; max-width: 90%; } */
+             .sort-controls { text-align: center; } /* Center sort controls on smaller screens */
+             .sort-controls button { margin-left: 5px; margin-right: 5px; } /* Adjust margins */
         }
         @media (max-width: 768px) {
              .subscribe-inputs1 form {
@@ -1074,6 +1104,11 @@
              initialMessage: null,
              corsWarning: null,
 
+             // State variables for sorting
+             currentSortKey: 'none', // e.g., 'price'
+             currentSortDirection: 'asc', // 'asc' or 'desc'
+
+
             targetBaseUrl: 'https://irc.fda.gov.ir',
             searchEndpoint: '/nfi/Search',
 
@@ -1097,7 +1132,6 @@
                     this.handleInputDirection(); // Set initial direction
                     this.termInput.addEventListener('input', this.handleInputDirection.bind(this)); // Add listener for changes
                 }
-
 
                  // Initially show messages
                  if (this.initialMessage) this.initialMessage.style.display = 'block';
@@ -1128,9 +1162,7 @@
                  if (this.searchForm) this.searchForm.addEventListener('submit', this.handleSearchSubmit.bind(this));
 
                  // Event Delegation for dynamically added content inside resultDiv
-                 // This will now handle image clicks and suggestion clicks
-                 // The detail link click is NO LONGER intercepted by JS,
-                 // it will perform its default action (redirection).
+                 // This will now handle image clicks, suggestion clicks, AND sort button clicks
                  if (this.resultDiv) this.resultDiv.addEventListener('click', this.handleResultAreaClick.bind(this));
 
                  // Pagination link listeners are attached after rendering in renderResults
@@ -1149,6 +1181,9 @@
                     console.log("Search skipped: Empty search term.");
                     return;
                 }
+                 // Reset sort when performing a new search
+                 this.currentSortKey = 'none';
+                 this.currentSortDirection = 'asc';
 
                 this.performSearch(searchTerm); // Start search from page 1
             },
@@ -1159,6 +1194,7 @@
                  // Removed detail link check as it's no longer intercepted by JS
                  // const clickedDetailLink = event.target.closest('.drug-card .detail-link');
                  const clickedSuggestionLink = event.target.closest('.suggestions-list a');
+                 const clickedSortButton = event.target.closest('.sort-controls button'); // Check for sort buttons
                  // Pagination links are handled by their specific listeners attached after rendering
 
                  if (clickedImageContainer) {
@@ -1182,8 +1218,25 @@
                      } else {
                          console.error("Could not get suggested term from link data attribute or termInput not found.");
                      }
+                 } else if (clickedSortButton) {
+                     // Handle sort button click
+                     const sortKey = clickedSortButton.getAttribute('data-sort-key');
+                     const sortDirection = clickedSortButton.getAttribute('data-sort-direction');
+
+                     if (sortKey && sortDirection) {
+                         this.currentSortKey = sortKey;
+                         this.currentSortDirection = sortDirection;
+                         this.sortResults(sortKey, sortDirection); // Perform sorting on the current results
+                         // Update active button classes
+                         this.resultDiv.querySelectorAll('.sort-controls button').forEach(btn => {
+                             btn.classList.remove('active');
+                         });
+                         clickedSortButton.classList.add('active');
+                     } else {
+                         console.error("Sort button missing data-sort-key or data-sort-direction attributes.");
+                     }
                  }
-                 // Clicks on .detail-link are now *not* handled here, so they trigger default navigation
+                 // Clicks on .detail-link and .pagination a are not intercepted here
             },
 
              fetchAndShowImageModal: async function(detailUrl, drugTitle) {
@@ -1198,18 +1251,17 @@
                  if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
 
                  try {
+                     // --- FIX: Read response text BEFORE checking response.ok ---
                      const detailResponse = await fetch(detailUrl);
+                     const detailHtmlString = await detailResponse.text(); // Read text here
+
                      if (!detailResponse.ok) {
                           let errorDetail = `Status: ${detailResponse.status}`;
-                         let responseTextSample = '';
-                         try {
-                             const text = await detailResponse.text();
-                             responseTextSample = text.substring(0, 200);
-                             errorDetail += ` - ${detailResponse.statusText}`;
-                         } catch (e) { /* ignore */ }
-                        throw new Error(`HTTP error fetching detail page! ${errorDetail}. Response sample: ${responseTextSample}...`);
+                           errorDetail += ` - ${detailResponse.statusText}`;
+                           let responseTextSample = detailHtmlString.substring(0, 200); // Use the text we already read
+                           throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
                      }
-                     const detailHtmlString = await detailResponse.text();
+
                      const parser = new DOMParser();
                      const detailDoc = parser.parseFromString(detailHtmlString, 'text/html');
 
@@ -1285,7 +1337,8 @@
                  this.mainLoadingSpinner = mainSpinnerElement; // Update reference
 
                  this.resultDiv.className = 'loading-container'; // Add class for centering spinner
-                 this.mainLoadingSpinner.style.display = 'block'; // Now this refers to the correct element
+                 if(this.mainLoadingSpinner) this.mainLoadingSpinner.style.display = 'block'; // Add check
+
 
                 const encodedSearchTerm = encodeURIComponent(searchTerm);
                 const targetUrl = `${this.targetBaseUrl}${this.searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
@@ -1295,18 +1348,16 @@
                 try {
                     const response = await fetch(targetUrl);
 
+                    // --- FIX: Read response text BEFORE checking response.ok ---
+                    const htmlString = await response.text(); // Read text here
+
                     if (!response.ok) {
                          let errorDetail = `Status: ${response.status}`;
-                         let responseTextSample = '';
-                         try {
-                             const text = await response.text();
-                             responseTextSample = text.substring(0, 200);
-                             errorDetail += ` - ${response.statusText}`;
-                         } catch (e) { /* ignore */ }
-                         throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
+                           errorDetail += ` - ${response.statusText}`;
+                           let responseTextSample = htmlString.substring(0, 200); // Use the text we already read
+                           throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
                     }
 
-                    const htmlString = await response.text();
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlString, 'text/html');
 
@@ -1346,7 +1397,18 @@
              renderResults: function(resultItems, paginationElement) {
                  console.log(`Detected ${resultItems.length} search results.`);
                  let resultsHtml = '<h3 style="color: #1f3a65; margin-bottom: 30px; text-align: center;">نتایج جستجو:</h3>';
-                 resultsHtml += '<ul class="results-list">';
+
+                 // Add sorting controls here
+                 resultsHtml += `
+                     <div class="sort-controls">
+                         <span>مرتب‌سازی بر اساس قیمت:</span>
+                         <button data-sort-key="price" data-sort-direction="asc">صعودی</button>
+                         <button data-sort-key="price" data-sort-direction="desc">نزولی</button>
+                     </div>
+                 `;
+
+
+                 resultsHtml += '<ul id="resultsList" class="results-list">'; // Added ID to the UL
 
                 resultItems.forEach(item => {
                     // --- Extract Data ---
@@ -1368,6 +1430,7 @@
                     const imageAlt = imageElement ? imageElement.getAttribute('alt') || persianTitle : persianTitle;
 
                     let details = {};
+                    let rawPrice = '0'; // Initialize raw price
                     const detailRows = item.querySelectorAll('.searchRow > .row');
                     detailRows.forEach(row => {
                         const columns = row.querySelectorAll('.col-lg-4, .col-md-4, col-sm-6, col-xs-12');
@@ -1379,7 +1442,10 @@
                                 const valueText = valueElement.textContent.trim();
                                 if (labelText.includes('صاحب برند')) details.brandOwner = valueText;
                                 else if (labelText.includes('صاحب پروانه')) details.licenseHolder = valueText;
-                                else if (labelText.includes('قیمت هر بسته')) details.price = addCommas(valueText);
+                                else if (labelText.includes('قیمت هر بسته')) {
+                                     rawPrice = valueText; // Store raw price before formatting
+                                     details.price = addCommas(valueText); // Store formatted price for display
+                                }
                                 else if (labelText.includes('بسته بندی')) details.packaging = valueText;
                                 else if (labelText.includes('کد فرآورده')) details.productCode = valueText;
                                 else if (labelText.includes('کد ژنریک')) details.genericCode = valueText;
@@ -1387,10 +1453,10 @@
                         });
                     });
 
-                    // --- Build HTML for a single card (with data attributes) ---
+                    // --- Build HTML for a single card (with data attributes including raw price) ---
                     resultsHtml += `
                         <li>
-                            <div class="drug-card">
+                            <div class="drug-card" data-raw-price="${rawPrice}">
                                 ${imageUrl ? `
                                     <div class="card-image" data-detail-url="${absoluteDetailLink}" data-drug-title="${persianTitle}">
                                         <img src="${imageUrl}" alt="${imageAlt}" loading="lazy" />
@@ -1456,10 +1522,12 @@
 
                  // Update the DOM
                 this.resultDiv.innerHTML = resultsHtml;
+                // this.resultDiv.className = ''; // Already removed loading/error classes
 
+
+                 // --- AFTER rendering, re-attach event listeners and apply initial/current sort ---
 
                  // Re-attach event listeners to the new pagination links
-                 // These listeners should still trigger performSearch, NOT default link action
                  if (this.resultDiv.querySelector('.pagination')) {
                      this.resultDiv.querySelectorAll('.pagination a').forEach(link => {
                           link.addEventListener('click', function(e) {
@@ -1475,7 +1543,70 @@
                           });
                      });
                  }
+
+                 // Apply the current sort state after rendering
+                 if (this.currentSortKey !== 'none') {
+                     this.sortResults(this.currentSortKey, this.currentSortDirection);
+                     // Also highlight the active sort button
+                     const activeBtn = this.resultDiv.querySelector(`.sort-controls button[data-sort-key="${this.currentSortKey}"][data-sort-direction="${this.currentSortDirection}"]`);
+                     if (activeBtn) activeBtn.classList.add('active');
+                 }
             },
+
+            // Method to sort the displayed results
+             sortResults: function(sortKey, sortDirection) {
+                 const resultsListUl = this.resultDiv.querySelector('#resultsList');
+                 if (!resultsListUl) {
+                     console.warn("Results list UL not found for sorting.");
+                     return;
+                 }
+
+                 const listItems = Array.from(resultsListUl.querySelectorAll('li')); // Get all LI elements as an array
+
+                 listItems.sort((a, b) => {
+                     let aValue, bValue;
+
+                     // Get value based on sortKey
+                     if (sortKey === 'price') {
+                         // Get the raw price from the data attribute
+                         const aPriceStr = a.querySelector('.drug-card')?.getAttribute('data-raw-price') || '0';
+                         const bPriceStr = b.querySelector('.drug-card')?.getAttribute('data-raw-price') || '0';
+                         aValue = parseFloat(aPriceStr.replace(/,/g, '')); // Parse as number, remove commas
+                         bValue = parseFloat(bPriceStr.replace(/,/g, ''));
+
+                         // Handle potential NaN from parsing errors or missing data
+                         if (isNaN(aValue)) aValue = 0;
+                         if (isNaN(bValue)) bValue = 0;
+
+                     }
+                     // Add other sort keys here if needed later
+
+                     let comparison = 0;
+                     if (aValue > bValue) {
+                         comparison = 1;
+                     } else if (aValue < bValue) {
+                         comparison = -1;
+                     }
+
+                     // Apply direction
+                     if (sortDirection === 'desc') {
+                         comparison = comparison * -1;
+                     }
+
+                     return comparison;
+                 });
+
+                 // Re-append sorted list items to the UL
+                 // This uses document fragment for potentially better performance with many items
+                 const fragment = document.createDocumentFragment();
+                 listItems.forEach(item => {
+                     fragment.appendChild(item);
+                 });
+                 resultsListUl.appendChild(fragment);
+
+                 console.log(`Results sorted by ${sortKey} ${sortDirection}.`);
+             },
+
 
              renderNoResults: function(noResultsTitleElement, suggestionLinks) {
                  console.log("Detected no results and suggestions.");
