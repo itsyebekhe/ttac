@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جستجوی دارو - شبیه‌ساز</title>
+    <!-- Persian Font: Vazirmatn from cdn.jsdelivr.net -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+
+    <!-- Styling -->
+    <style>
+        /* Basic & Body Styling */
+        body {
+            margin: 0;
+            font-family: Vazirmatn, sans-serif; /* Correct font-family as requested */
+            line-height: 1.6;
+            background-color: #f4f7f6;
+            color: #333;
+            padding-top: 20px;
+            direction: rtl; /* Default direction */
+            text-align: right; /* Default alignment */
+        }
+
+        /* Disable body scroll when modal is open */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px; /* Even Wider container to better fit large images + content */
+            margin: 0 auto;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        /* Search Section Styling */
+        .subscribe {
+            background-color: #ffffff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px; /* More rounded corners */
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* Softer, larger shadow */
+        }
+
+        .subscribe-inputs1 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .subscribe-inputs1 > div { /* Styling for the "جستجو نمایید" text */
+            width: 100%;
+            text-align: right !important;
+            font-size: 16px; /* Slightly larger */
+            color: #1f3a65;
+            padding: 5px 0;
+            margin-bottom: 15px;
+            font-weight: 700; /* Bolder */
+        }
+
+        .subscribe-inputs1 form {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 600px; /* Wider form */
+            gap: 15px; /* Increased gap */
+        }
+
+        .subscribe-inputs1 input[type="text"] {
+            flex-grow: 1;
+            padding: 14px 18px; /* Increased padding */
+            border: 1px solid #ced4da;
+            border-radius: 6px; /* More rounded input */
+            font-size: 1.1rem; /* Larger font in input */
+            box-sizing: border-box;
+            text-align: right;
+            font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn font for input */
+        }
+
+        .subscribe-inputs1 input[type="submit"] {
+            padding: 14px 30px; /* Increased padding */
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px; /* More rounded button */
+            font-size: 1.1rem; /* Larger font in button */
+            font-weight: 600; /* Semi-bold */
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .subscribe-inputs1 input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+         .subscribe-inputs1 input[type="submit"]:active {
+            transform: scale(0.98);
+        }
+
+        /* Results Area Styling */
+        #simulationResult {
+            margin: 20px auto;
+            max-width: 950px; /* Match container width */
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        #simulationResult.loading {
+            text-align: center;
+            color: #007bff;
+            padding: 40px 15px;
+            font-size: 1.4rem;
+        }
+
+        #simulationResult.error {
+            color: #dc3545;
+            border: 1px dashed #dc3545;
+            background-color: #fff3f3;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        #simulationResult.error p { margin: 0 0 10px 0; }
+        #simulationResult.error ul { margin-top: 5px; padding-right: 20px; }
+
+         /* Results List */
+         .results-list {
+             list-style: none;
+             padding: 0;
+             margin: 0;
+         }
+          .results-list li {
+              margin-bottom: 20px; /* Space between cards */
+          }
+          .results-list li:last-child {
+              margin-bottom: 0;
+          }
+
+
+        /* Drug Card Styling */
+        .drug-card {
+            background-color: #ffffff;
+            border-radius: 10px; /* Match subscribe section radius */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Clearer shadow */
+            padding: 25px; /* More padding inside card */
+            display: flex;
+            align-items: flex-start;
+            gap: 30px; /* Increased gap to accommodate larger image */
+            flex-wrap: wrap;
+            transition: transform 0.2s ease-in-out;
+            direction: rtl; /* Ensure card content is RTL */
+            text-align: right;
+        }
+
+        .drug-card:hover {
+             transform: translateY(-5px); /* Clearer lift effect */
+        }
+
+        .drug-card .card-image {
+            flex-shrink: 0;
+            width: 200px; /* Made image container much larger */
+            max-width: 30%; /* Limit max width relative to card content */
+            text-align: center;
+            margin-bottom: 15px; /* Space below image on wrapping */
+            order: 1;
+            cursor: zoom-in; /* Indicate clickability */
+        }
+         .drug-card .card-image img {
+            display: block; /* Remove extra space below image */
+            max-width: 100%; /* Image scales within its container */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 6px;
+            border: 1px solid #eee;
+            padding: 5px;
+            background-color: white;
+         }
+
+
+        .drug-card .card-content {
+            flex-grow: 1;
+            min-width: 0; /* Allow content to shrink */
+            order: 2;
+        }
+
+        .drug-card h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #1f3a65;
+            font-size: 1.6rem; /* Larger title */
+            font-weight: 800; /* Extra bold */
+            word-break: break-word;
+            font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn for Persian titles */
+        }
+
+        .drug-card .english-title {
+            font-size: 1.1rem; /* Larger English title */
+            color: #555;
+            margin-bottom: 18px; /* More space */
+            word-break: break-word;
+            direction: ltr; /* English text LTR */
+            text-align: left; /* Align English text left */
+            font-family: Arial, Helvetica, sans-serif; /* English font */
+        }
+
+        .drug-card .main-details {
+             display: flex;
+             align-items: baseline;
+             margin-bottom: 20px; /* More space */
+             flex-wrap: wrap;
+             gap: 20px; /* Increased gap */
+        }
+         .drug-card .price-group {
+             display: flex;
+             align-items: baseline;
+             gap: 8px; /* Increased gap within price group */
+         }
+         .drug-card .price {
+            font-size: 1.8rem; /* Even larger price */
+            font-weight: bold;
+            color: #28a745; /* Green color */
+             word-break: break-word;
+             direction: ltr; /* Price numbers LTR */
+             font-family: Arial, Helvetica, sans-serif; /* English font for numbers */
+        }
+         .drug-card .price-label, .drug-card .price-unit {
+            font-size: 1.2rem; /* Larger label/unit */
+            color: #555;
+             font-weight: 600; /* Semi-bold labels */
+              font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn for Persian labels */
+         }
+
+
+        .drug-card .other-details {
+            border-top: 1px solid #eee;
+            padding-top: 20px; /* Increased padding */
+            font-size: 1rem; /* Standard detail font size */
+            color: #666;
+            margin-top: 20px; /* Increased space */
+        }
+
+         .drug-card .detail-row {
+             margin-bottom: 10px; /* More space between rows */
+             display: flex;
+             flex-wrap: wrap;
+             align-items: baseline;
+             gap: 8px; /* Increased gap */
+         }
+         .drug-card .detail-row label {
+             font-weight: bold;
+             flex-shrink: 0;
+             word-break: break-word;
+             color: #444; /* Slightly darker label color */
+              font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn for Persian labels */
+         }
+         .drug-card .detail-row span,
+         .drug-card .detail-row bdo {
+              flex-grow: 1;
+              word-break: break-word;
+              text-align: left; /* LTR values align left */
+              direction: ltr; /* Ensure LTR for codes/numbers/packaging */
+              font-family: Arial, Helvetica, sans-serif; /* English font */
+         }
+
+
+        .drug-card .detail-link {
+            display: inline-block;
+            margin-top: 25px; /* More space */
+            padding: 10px 25px; /* Increased padding */
+            background-color: #e9ecef;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: background-color 0.2s ease-in-out;
+            font-weight: 500; /* Medium weight */
+             font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn for the link text */
+        }
+
+        .drug-card .detail-link:hover {
+            background-color: #dee2e6;
+        }
+
+        /* Pagination Styling */
+        .pagination-container {
+            margin-top: 40px; /* More space above pagination */
+            margin-bottom: 40px; /* Space below pagination */
+            text-align: center;
+        }
+
+        .pagination {
+            display: inline-flex;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            border-radius: 6px; /* Match other rounded corners */
+            overflow: hidden;
+        }
+
+        .pagination li {
+            margin: 0;
+        }
+
+        .pagination li a {
+            display: flex; /* Use flex to center icon/text */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            padding: 12px 16px; /* Increased padding */
+            border: 1px solid #dee2e6;
+            color: #007bff;
+            text-decoration: none;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            min-width: 40px; /* Wider minimum width for icons/numbers */
+            font-size: 1.1rem; /* Larger font for numbers/icons */
+            font-weight: 600; /* Semi-bold */
+             /* Ensure LTR direction for iconic buttons and numbers */
+            direction: ltr;
+             font-family: Arial, Helvetica, sans-serif; /* Use English font for numbers/icons */
+        }
+
+        /* Specific border-radius for RTL */
+        .pagination li:first-child a {
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+         .pagination li:last-child a {
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+             border-left-width: 1px; /* Ensure border is present */
+         }
+         /* Remove left border for all except the last one */
+        .pagination li:not(:last-child) a {
+            border-left-width: 0;
+        }
+
+
+        .pagination li a:hover {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+        }
+
+        .pagination li.active a {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+            pointer-events: none;
+        }
+
+        .pagination li.disabled a {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #e9ecef;
+             border-color: #dee2e6;
+        }
+
+        /* No Results / Suggestions Styling */
+        .no-results-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            text-align: center; /* Center the message block */
+            direction: rtl; /* Ensure RTL */
+             font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn font for no results text */
+        }
+         .no-results-container h3 {
+            color: #1f3a65;
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn font */
+         }
+
+         .no-results-container .suggestions-list {
+             list-style: none;
+             padding: 0;
+             margin: 0;
+             text-align: right; /* Align list items to the right */
+         }
+          .no-results-container .suggestions-list li {
+              margin-bottom: 10px;
+          }
+          .no-results-container .suggestions-list li a {
+              color: #007bff; /* Blue color for links */
+              text-decoration: none;
+              font-size: 1rem;
+              transition: color 0.2s ease;
+              font-weight: 500;
+              font-family: Vazirmatn, sans-serif; /* Ensure Vazirmatn font for suggestion text */
+          }
+           .no-results-container .suggestions-list li a:hover {
+               text-decoration: underline;
+               color: #0056b3;
+           }
+
+        /* Image Modal (Lightbox) Styling */
+        .image-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9); /* Darker overlay */
+            z-index: 1040; /* Higher z-index than Bootstrap modals if present */
+            display: none; /* Hidden by default */
+            opacity: 0; /* Start hidden for transition */
+            transition: opacity 0.3s ease;
+        }
+
+        .image-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1050; /* Higher than overlay */
+            display: flex; /* Use flexbox to center image and spinner */
+            justify-content: center;
+            align-items: center;
+            max-width: 95%; /* Prevent from overflowing viewport */
+            max-height: 95%;
+             /* No text-align needed due to flexbox */
+            opacity: 0; /* Start hidden for transition */
+            transition: opacity 0.3s ease;
+        }
+
+        .zoomed-image {
+            display: block; /* Ensure block for sizing */
+            max-width: 100%; /* Image scales within modal */
+            max-height: calc(100vh - 100px); /* Limit height based on viewport, leave space for close button/padding/caption */
+            height: auto; /* Maintain aspect ratio */
+            margin: auto; /* Center image using auto margins (works with flexbox) */
+            object-fit: contain; /* Ensure image fits without cropping */
+            cursor: grab; /* Indicate draggable/zoomable */
+            touch-action: pan-x pan-y; /* Allow user to drag on touch devices */
+            user-select: none; /* Prevent selecting the image when dragging */
+             /* Remove default styling */
+            border: none;
+            padding: 0;
+            background: none;
+             /* Initially hidden while loading */
+            display: none;
+        }
+
+        .close-modal {
+            position: fixed;
+            top: 15px;
+            right: 15px; /* Position on right universally */
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+            z-index: 1060;
+            transition: color 0.3s ease, opacity 0.3s ease;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            opacity: 0; /* Start hidden for transition */
+            display: none; /* Initially hidden */
+             /* Ensure it's clickable over overlay */
+            pointer-events: auto;
+        }
+
+        .close-modal:hover {
+            color: #ccc;
+        }
+
+        /* Navigation buttons for gallery */
+        .modal-nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1055; /* Between modal content and close button */
+            background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white */
+            color: #fff;
+            border: none;
+            padding: 15px; /* Even padding for touch targets */
+            cursor: pointer;
+            font-size: 2rem; /* Large arrows */
+            transition: background-color 0.3s ease, opacity 0.3s ease;
+            user-select: none;
+             display: none; /* Hidden by default */
+             opacity: 0; /* Start hidden for transition */
+             /* Ensure clickable over overlay */
+            pointer-events: auto;
+             /* Circular button shape */
+            border-radius: 50%;
+             width: 50px; /* Fixed width/height for circle */
+             height: 50px;
+             display: flex; /* Center content */
+             justify-content: center;
+             align-items: center;
+        }
+        .modal-nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .prev-image-button {
+            left: 10px; /* Position on the left */
+             /* Remove specific border radius for circle */
+             border-top-left-radius: 50%;
+             border-bottom-left-radius: 50%;
+             border-top-right-radius: 50%;
+             border-bottom-right-radius: 50%;
+        }
+         .next-image-button {
+            right: 10px; /* Position on the right */
+             /* Remove specific border radius for circle */
+             border-top-left-radius: 50%;
+             border-bottom-left-radius: 50%;
+             border-top-right-radius: 50%;
+             border-bottom-right-radius: 50%;
+        }
+
+        /* Image count/caption */
+        .modal-caption {
+            position: fixed;
+            bottom: 20px; /* Moved up slightly */
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #fff;
+            font-size: 1.1rem;
+            z-index: 1055;
+             display: none; /* Hidden by default */
+             opacity: 0; /* Start hidden for transition */
+             transition: opacity 0.3s ease;
+             text-shadow: 0 0 5px rgba(0,0,0,0.5);
+             /* Ensure it's visible over overlay */
+             pointer-events: none; /* Prevent caption itself from blocking clicks on overlay */
+        }
+         #modalLoadingSpinner {
+             /* Styling for the spinner text */
+             color: white;
+             font-size: 1.2rem;
+             position: absolute;
+             top: 50%;
+             left: 50%;
+             transform: translate(-50%, -50%);
+             z-index: 1051;
+             display: none; /* Hidden by default */
+             text-shadow: 0 0 5px rgba(0,0,0,0.5);
+         }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+             .drug-card .card-image {
+                 width: 160px;
+             }
+             .modal-nav-button {
+                 padding: 10px; /* Adjust padding for smaller circle */
+                 font-size: 1.8rem;
+                 width: 40px;
+                 height: 40px;
+             }
+             .modal-caption {
+                 font-size: 1rem;
+             }
+        }
+        @media (max-width: 768px) {
+             .subscribe-inputs1 form {
+                 flex-direction: column;
+                 align-items: stretch;
+                 gap: 10px;
+             }
+             .subscribe-inputs1 input[type="text"] {
+                 margin-right: 0;
+             }
+             .subscribe-inputs1 input[type="submit"] {
+                width: 100%;
+             }
+             .drug-card {
+                 flex-direction: column;
+                 align-items: center;
+                 gap: 15px;
+                 padding: 20px;
+             }
+             .drug-card .card-image {
+                 width: 120px;
+                 margin-left: 0;
+                 margin-bottom: 0;
+                 order: 1;
+                 max-width: none;
+             }
+             .drug-card .card-content {
+                 width: 100%;
+                 min-width: auto;
+                 text-align: center;
+                 order: 2;
+             }
+             .drug-card h3, .drug-card .english-title {
+                 text-align: center;
+             }
+             .drug-card .main-details {
+                 flex-direction: column;
+                 align-items: center;
+                 text-align: center;
+                 gap: 10px;
+             }
+              .drug-card .price-group {
+                 flex-direction: column;
+                 align-items: center;
+                 gap: 3px;
+             }
+              .drug-card .price-label, .drug-card .price-unit {
+                  font-size: 1rem;
+              }
+              .drug-card .price-label { margin-bottom: 5px; }
+
+             .drug-card .other-details {
+                 text-align: right;
+                  padding-top: 15px;
+                  margin-top: 15px;
+             }
+             .drug-card .detail-row {
+                 flex-direction: column;
+                 align-items: flex-start;
+                 gap: 5px;
+             }
+             .drug-card .detail-row label {
+                 margin-left: 0;
+             }
+             .drug-card .detail-row span, .drug-card .detail-row bdo {
+                  text-align: right;
+             }
+             .drug-card .detail-link {
+                 margin-top: 20px;
+             }
+
+             .pagination li a {
+                 padding: 10px 12px;
+                 min-width: 35px;
+                 font-size: 1rem;
+             }
+             .pagination li:first-child a {
+                 border-top-right-radius: 4px;
+                 border-bottom-right-radius: 4px;
+             }
+             .pagination li:last-child a {
+                border-top-left-radius: 4px;
+                border-bottom-left-radius: 4px;
+             }
+             .no-results-container {
+                 padding: 20px;
+             }
+             .no-results-container h3 {
+                 font-size: 1.3rem;
+             }
+
+             .close-modal {
+                 top: 10px;
+                 right: 10px;
+                 font-size: 30px;
+             }
+             .zoomed-image {
+                 max-height: calc(100vh - 60px);
+             }
+
+              .modal-nav-button {
+                 padding: 8px; /* Adjust padding for smaller circle */
+                 font-size: 1.5rem;
+                 width: 35px;
+                 height: 35px;
+             }
+             .prev-image-button { left: 5px; }
+             .next-image-button { right: 5px; }
+
+         }
+
+         @media (max-width: 480px) {
+              .subscribe, .drug-card {
+                  padding: 15px;
+              }
+               .drug-card .card-image {
+                 width: 100px;
+               }
+               .drug-card h3 {
+                   font-size: 1.4rem;
+               }
+               .drug-card .english-title {
+                   font-size: 1rem;
+               }
+               .drug-card .price {
+                   font-size: 1.6rem;
+               }
+               .drug-card .price-label, .drug-card .price-unit {
+                   font-size: 1.1rem;
+               }
+               .drug-card .detail-link {
+                    padding: 8px 15px;
+                    font-size: 0.9rem;
+               }
+                .no-results-container {
+                 padding: 15px;
+             }
+             .no-results-container h3 {
+                 font-size: 1.2rem;
+             }
+         }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <section id="subscribe" class="subscribe">
+            <div class="containerSearch" style="float: none; padding-top:0px; margin:0 auto;">
+                <div class="subscribe-inputs1">
+                    <div> داروی مورد نظر را جستجو نمایید</div>
+                    <form action="#" method="post">
+                        <input id="Term" name="Term" type="text" value="" placeholder="نام دارو..." />
+                        <input value="جستجو" type="submit">
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- This div will display the search results, no results message, or pagination -->
+        <div id="simulationResult">
+            <p style="text-align: center;">داروی مورد نظر خود را جستجو کنید.</p>
+            <p style="font-size: 0.9em; color: #555; text-align: center;">(توجه: این شبیه‌ساز تلاش می‌کند اطلاعات را از وبسایت خارجی دریافت کند که ممکن است به دلیل سیاست CORS مسدود شود.)</p>
+        </div>
+    </div>
+
+    <!-- Image Modal (Lightbox) Structure -->
+    <div id="imageOverlay" class="image-overlay"></div>
+    <div id="imageModal" class="image-modal">
+        <img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image">
+         <!-- Loading spinner for modal -->
+        <div id="modalLoadingSpinner">
+            در حال بارگذاری عکس...
+        </div>
+    </div>
+     <!-- Close button - placed outside the modal for simpler fixed positioning -->
+     <span id="closeModal" class="close-modal">×</span>
+     <!-- Navigation buttons -->
+    <button id="prevImageButton" class="modal-nav-button prev-image-button">‹</button>
+    <button id="nextImageButton" class="modal-nav-button next-image-button">›</button>
+     <!-- Image count / caption -->
+    <div id="modalCaption" class="modal-caption"></div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const searchForm = document.querySelector('#subscribe .subscribe-inputs1 form');
+            const termInput = document.getElementById('Term');
+            const resultDiv = document.getElementById('simulationResult');
+
+            // Get modal elements
+            const imageOverlay = document.getElementById('imageOverlay');
+            const imageModal = document.getElementById('imageModal');
+            const zoomedImage = document.getElementById('zoomedImage');
+            const closeModalButton = document.getElementById('closeModal');
+            const prevImageButton = document.getElementById('prevImageButton');
+            const nextImageButton = document.getElementById('nextImageButton');
+            const modalCaption = document.getElementById('modalCaption');
+            const modalLoadingSpinner = document.getElementById('modalLoadingSpinner');
+
+
+            const targetBaseUrl = 'https://irc.fda.gov.ir';
+            const searchEndpoint = '/nfi/Search';
+
+            // State variables for the image gallery in the modal
+            let currentGalleryImages = [];
+            let currentImageIndex = 0;
+            let currentDrugTitle = ''; // To use as alt text fallback
+
+            // Function to extract query parameters from a URL
+            function getQueryParams(url) {
+                const params = {};
+                const queryString = url.split('?')[1];
+                if (queryString) {
+                    const urlParams = new URLSearchParams(queryString);
+                    for (const [key, value] of urlParams) {
+                        params[key] = value;
+                    }
+                }
+                return params;
+            }
+
+             // Function to format price with commas
+            function addCommas(nStr) {
+                nStr += '';
+                const x = nStr.split('.');
+                let x1 = x[0];
+                const x2 = x.length > 1 ? '.' + x[1] : '';
+                const rgx = /(\d+)(\d{3})/;
+                while (rgx.test(x1)) {
+                    x1 = x1.replace(rgx, '$1' + ',' + '$2');
+                }
+                return x1 + x2;
+            }
+
+            // Function to determine iconic text for pagination
+            function getIconicPaginationText(originalText) {
+                const trimmedText = originalText.trim();
+                // Check for navigation icons first based on the original site's text
+                if (trimmedText === '>>') return '«'; // First page (far right in RTL)
+                if (trimmedText === '<') return '›';  // Next page (points right in RTL)
+                if (trimmedText === '>') return '‹';  // Previous page (points left in RTL)
+                if (trimmedText === '<<') return '»'; // Last page (far left in RTL)
+                 // Check if it's purely a number using regex
+                 if (/^\d+$/.test(trimmedText)) {
+                     return trimmedText; // Keep numbers as is
+                 }
+                return originalText; // Fallback to original text if not recognized
+            }
+
+            // Function to update the displayed image in the modal
+            function displayCurrentModalImage() {
+                 modalLoadingSpinner.style.display = 'block'; // Show spinner
+                 zoomedImage.style.display = 'none'; // Hide image while loading
+                 // Hide nav/caption temporarily
+                 modalCaption.style.opacity = 0;
+                 prevImageButton.style.opacity = 0;
+                 nextImageButton.style.opacity = 0;
+
+
+                if (currentGalleryImages.length > 0 && currentImageIndex >= 0 && currentImageIndex < currentGalleryImages.length) {
+                    const imageUrl = currentGalleryImages[currentImageIndex];
+                    zoomedImage.src = imageUrl;
+                    zoomedImage.alt = currentDrugTitle || 'Image'; // Use drug title or generic alt
+
+                    // Add load listener to hide spinner and show image
+                    zoomedImage.onload = () => {
+                         modalLoadingSpinner.style.display = 'none';
+                         zoomedImage.style.display = 'block';
+                         // Show nav/caption after image loads and modal is visible
+                         setTimeout(() => { // Use a small delay to ensure modal is fully faded in
+                              modalCaption.textContent = `${currentImageIndex + 1} از ${currentGalleryImages.length}`;
+                              modalCaption.style.display = 'block';
+                              modalCaption.style.opacity = 1;
+                              if (currentGalleryImages.length > 1) {
+                                   prevImageButton.style.display = 'flex'; // Use flex because of CSS centering
+                                   nextImageButton.style.display = 'flex';
+                                   prevImageButton.style.opacity = 1;
+                                   nextImageButton.style.opacity = 1;
+                              }
+                         }, 50); // Short delay
+
+
+                    };
+                     // Add error listener in case image fails to load
+                    zoomedImage.onerror = () => {
+                         modalLoadingSpinner.style.display = 'none';
+                         zoomedImage.style.display = 'none'; // Hide image tag completely on error
+                         modalCaption.textContent = 'خطا در بارگذاری عکس';
+                         modalCaption.style.display = 'block'; // Show error caption
+                         modalCaption.style.opacity = 1;
+                         prevImageButton.style.display = 'none';
+                         nextImageButton.style.display = 'none';
+                         console.error('Failed to load image:', imageUrl);
+                    };
+
+
+                } else {
+                    // Hide everything if no images
+                    zoomedImage.src = '';
+                    zoomedImage.alt = '';
+                    modalCaption.textContent = 'عکسی یافت نشد.';
+                    modalCaption.style.display = 'block';
+                    modalCaption.style.opacity = 1;
+                    prevImageButton.style.display = 'none';
+                    nextImageButton.style.display = 'none';
+                    modalLoadingSpinner.style.display = 'none';
+                    zoomedImage.style.display = 'none';
+                }
+            }
+
+
+            // Function to show the modal
+            function showImageModal(galleryImages, drugTitle, initialIndex = 0) {
+                 currentGalleryImages = galleryImages || [];
+                 currentImageIndex = initialIndex;
+                 currentDrugTitle = drugTitle || '';
+
+                 // Set initial display state
+                imageOverlay.style.display = 'block';
+                imageModal.style.display = 'flex'; // Use flex as per CSS
+                 closeModalButton.style.display = 'block';
+                 modalCaption.style.display = 'none'; // Will be shown after image loads
+                 prevImageButton.style.display = 'none'; // Will be shown after image loads
+                 nextImageButton.style.display = 'none';
+
+
+                // Show opacity transition
+                setTimeout(() => {
+                     imageOverlay.style.opacity = 1;
+                     imageModal.style.opacity = 1;
+                     closeModalButton.style.opacity = 1;
+                     // Caption and Nav buttons opacity are handled in displayCurrentModalImage onload
+                }, 10);
+
+                document.body.classList.add('modal-open'); // Prevent body scroll
+
+                // Load and display the first image
+                 displayCurrentModalImage();
+            }
+
+            // Function to hide the modal
+            function hideImageModal() {
+                 // Hide opacity transition
+                imageOverlay.style.opacity = 0;
+                imageModal.style.opacity = 0;
+                closeModalButton.style.opacity = 0;
+                modalCaption.style.opacity = 0;
+                prevImageButton.style.opacity = 0;
+                nextImageButton.style.opacity = 0;
+
+
+                // Hide elements after transition completes
+                setTimeout(() => {
+                    imageOverlay.style.display = 'none';
+                    imageModal.style.display = 'none';
+                    closeModalButton.style.display = 'none';
+                    modalCaption.style.display = 'none';
+                    prevImageButton.style.display = 'none';
+                    nextImageButton.style.display = 'none';
+
+                    zoomedImage.src = ''; // Clear image src
+                    zoomedImage.alt = ''; // Clear alt text
+                     modalLoadingSpinner.style.display = 'none'; // Hide spinner
+                     zoomedImage.style.display = 'block'; // Reset img display state for next use
+
+                    currentGalleryImages = []; // Clear gallery state
+                    currentImageIndex = 0;
+                    currentDrugTitle = '';
+
+                    document.body.classList.remove('modal-open'); // Re-enable body scroll
+                }, 300); // Match CSS transition duration
+            }
+
+            // Navigation handlers
+            function showNextImage() {
+                 if (currentGalleryImages.length <= 1) return;
+                 currentImageIndex = (currentImageIndex + 1) % currentGalleryImages.length;
+                 displayCurrentModalImage();
+            }
+
+            function showPrevImage() {
+                 if (currentGalleryImages.length <= 1) return;
+                 currentImageIndex = (currentImageIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+                 displayCurrentModalImage();
+            }
+
+
+            async function performSearch(searchTerm, pageNumber = 1, pageSize = 10) {
+                resultDiv.innerHTML = '<p style="text-align: center;">در حال بارگذاری...</p>';
+                resultDiv.className = 'loading';
+
+                const encodedSearchTerm = encodeURIComponent(searchTerm);
+                const targetUrl = `${targetBaseUrl}${searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
+
+                console.log(`Attempting to fetch search results from: ${targetUrl}`);
+
+                try {
+                    const response = await fetch(targetUrl);
+
+                    if (!response.ok) {
+                         let errorDetail = `Status: ${response.status}`;
+                         try {
+                            const errorText = await response.text();
+                             errorDetail += ` - ${response.statusText} - ${errorText.substring(0, 200)}...`;
+                         } catch (e) { }
+                        throw new Error(`HTTP error! ${errorDetail}`);
+                    }
+
+                    const htmlString = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlString, 'text/html');
+
+                    const resultItems = doc.querySelectorAll('.RowSearchSty');
+                    let paginationElement = doc.querySelector('.pagination');
+                    const noResultsTitleElement = doc.querySelector('.txtSearchTitle1');
+                    const suggestionLinks = doc.querySelectorAll('.titleNotFind a');
+
+
+                    let resultsHtml = '';
+
+                    // --- Check for No Results First ---
+                    if (noResultsTitleElement && suggestionLinks.length > 0 && resultItems.length === 0) {
+                         console.log("Detected no results and suggestions.");
+                         const noResultsMessage = noResultsTitleElement.textContent.trim();
+                         resultsHtml += `
+                             <div class="no-results-container">
+                                 <h3>${noResultsMessage}</h3>
+                                 <ul class="suggestions-list">`;
+
+                         suggestionLinks.forEach(link => {
+                             const suggestedText = link.textContent.trim();
+                             const suggestedLinkHref = link.getAttribute('href');
+                             const hrefParams = getQueryParams(suggestedLinkHref);
+                             const suggestedTerm = hrefParams['term'] || suggestedText;
+
+                             resultsHtml += `
+                                 <li>
+                                     <a href="#" data-suggested-term="${suggestedTerm}">${suggestedText}</a>
+                                 </li>`;
+                         });
+
+                         resultsHtml += `
+                                 </ul>
+                             </div>
+                         `;
+                         paginationElement = null; // No pagination for suggestions
+
+                    } else if (resultItems.length > 0) {
+                         console.log(`Detected ${resultItems.length} search results.`);
+                         resultsHtml += '<h3 style="color: #1f3a65; margin-bottom: 30px; text-align: center;">نتایج جستجو:</h3>';
+                         resultsHtml += '<ul class="results-list">';
+
+                        resultItems.forEach(item => {
+                            // --- Extract Title and Link ---
+                            const persianLinkElement = item.querySelector('.titleSearch-Link-RtlAlter a');
+                            const englishLinkElement = item.querySelector('.titleSearch-Link-ltrAlter a');
+
+                            const persianTitle = persianLinkElement ? persianLinkElement.textContent.trim() : 'عنوان فارسی یافت نشد';
+                            let englishTitle = englishLinkElement ? englishLinkElement.textContent.trim() : 'English Title Not Found';
+                            englishTitle = englishTitle.replace(/^\(|\)$/g, '').trim();
+
+                            // CORRECTED: Extract the detail link from the fetched search result item
+                            const detailLink = persianLinkElement ? persianLinkElement.getAttribute('href') : '#';
+                             // Make detail link absolute before storing it
+                            const absoluteDetailLink = detailLink && detailLink !== '#' ? `${targetBaseUrl}${detailLink}` : '#';
+
+
+                            // --- Extract Image URL (the thumbnail from the search result) ---
+                            const imageElement = item.querySelector('.BoxImgSearch img');
+                            const imageUrl = imageElement ? `${targetBaseUrl}${imageElement.getAttribute('src')}` : '';
+                            const imageAlt = imageElement ? imageElement.getAttribute('alt') || persianTitle : persianTitle;
+
+                            // --- Extract Structured Details ---
+                            let details = {};
+                            const detailRows = item.querySelectorAll('.searchRow > .row');
+
+                            detailRows.forEach(row => {
+                                const columns = row.querySelectorAll('.col-lg-4, .col-md-4, .col-sm-6, .col-xs-12');
+
+                                columns.forEach(col => {
+                                    const labelElement = col.querySelector('label');
+                                    const valueElement = col.querySelector('span.txtSearch1, span.priceTxt, bdo');
+
+                                    if (labelElement && valueElement) {
+                                        const labelText = labelElement.textContent.trim();
+                                        const valueText = valueElement.textContent.trim();
+
+                                        if (labelText.includes('صاحب برند')) details.brandOwner = valueText;
+                                        else if (labelText.includes('صاحب پروانه')) details.licenseHolder = valueText;
+                                        else if (labelText.includes('قیمت هر بسته')) details.price = addCommas(valueText);
+                                        else if (labelText.includes('بسته بندی')) details.packaging = valueText;
+                                        else if (labelText.includes('کد فرآورده')) details.productCode = valueText;
+                                        else if (labelText.includes('کد ژنریک')) details.genericCode = valueText;
+                                    }
+                                });
+                            });
+
+                            // --- Build HTML for a single card ---
+                            resultsHtml += `
+                                <li>
+                                    <div class="drug-card">
+                                        ${imageUrl ? `
+                                            <div class="card-image" data-detail-url="${absoluteDetailLink}" data-drug-title="${persianTitle}">
+                                                <img src="${imageUrl}" alt="${imageAlt}" loading="lazy" />
+                                            </div>` : ''}
+                                        <div class="card-content">
+                                            <h3>${persianTitle}</h3>
+                                            <p class="english-title" dir="ltr">${englishTitle}</p>
+
+                                            <div class="main-details">
+                                                ${details.price ? `
+                                                    <div class="price-group">
+                                                        <span class="price-label">قیمت:</span>
+                                                        <span class="price" dir="ltr">${details.price}</span>
+                                                        <span class="price-unit">ریال</span>
+                                                    </div>` : ''}
+                                            </div>
+
+                                            <div class="other-details">
+                                                ${details.brandOwner ? `<div class="detail-row"><label>صاحب برند:</label> <span>${details.brandOwner}</span></div>` : ''}
+                                                ${details.licenseHolder ? `<div class="detail-row"><label>صاحب پروانه:</label> <span>${details.licenseHolder}</span></div>` : ''}
+                                                ${details.packaging ? `<div class="detail-row"><label>بسته بندی:</label> <bdo>${details.packaging}</bdo></div>` : ''}
+                                                ${details.productCode ? `<div class="detail-row"><label>کد فرآورده:</label> <span>${details.productCode}</span></div>` : ''}
+                                                ${details.genericCode ? `<div class="detail-row"><label>کد ژنریک:</label> <span>${details.genericCode}</span></div>` : ''}
+                                            </div>
+
+                                            <a href="${absoluteDetailLink}" target="_blank" class="detail-link">مشاهده جزئیات در سایت اصلی</a>
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+                        });
+
+                        resultsHtml += '</ul>'; // End the list of cards
+
+                        // --- Add Pagination (only if pagination element exists) ---
+                        if (paginationElement) {
+                             resultsHtml += '<div class="pagination-container"><ul class="pagination">';
+                             const pageLinks = paginationElement.querySelectorAll('li a');
+                             pageLinks.forEach(link => {
+                                 const linkHref = link.getAttribute('href');
+                                 const originalLinkText = link.textContent;
+                                 const linkClass = link.parentElement.className;
+
+                                 const buttonText = getIconicPaginationText(originalLinkText); // Get icon or number
+
+                                 // Extract page number from href, default to 1 if not found
+                                 const hrefParams = getQueryParams(linkHref);
+                                 const pageNum = hrefParams['PageNumber'] ? parseInt(hrefParams['PageNumber']) : 1;
+
+                                 const currentTerm = termInput.value.trim();
+
+                                 resultsHtml += `
+                                     <li class="${linkClass}">
+                                         <a href="#" data-page="${pageNum}" data-term="${currentTerm}">${buttonText}</a>
+                                     </li>`;
+                             });
+                            resultsHtml += '</ul></div>';
+                        }
+
+                    } else {
+                         console.log("No search results or suggestion structure found.");
+                        // Neither results nor suggestions were found, display a generic "no results" message
+                        resultsHtml += '<p style="text-align: center;">نتیجه‌ای برای جستجوی شما یافت نشد.</p>';
+                         paginationElement = null; // No pagination
+                    }
+
+                    // Update the DOM with the results/no results/suggestions HTML
+                    resultDiv.innerHTML = resultsHtml;
+                    resultDiv.className = ''; // Remove loading/error classes
+
+
+                    // --- Add Event Listeners to dynamically added content ---
+
+                    // 1. Image Click Listeners (using Event Delegation on resultDiv)
+                    resultDiv.addEventListener('click', async function(event) { // Make the event handler async
+                        const clickedImageContainer = event.target.closest('.drug-card .card-image'); // Check if clicked element or ancestor is the image container
+                        if (clickedImageContainer) {
+                            event.preventDefault(); // Prevent default link/button behavior if image is inside one
+
+                            const detailUrl = clickedImageContainer.getAttribute('data-detail-url');
+                            const drugTitle = clickedImageContainer.getAttribute('data-drug-title');
+
+                            if (!detailUrl || detailUrl === '#' || detailUrl === `${targetBaseUrl}#`) {
+                                console.warn("No valid detail URL found for this item.");
+                                // Optionally show a temporary message over the main results area
+                                return;
+                            }
+
+                            console.log(`Fetching detail page for gallery images from: ${detailUrl}`);
+
+                            // Immediately show loading state in the modal area
+                            modalLoadingSpinner.style.display = 'block';
+                             imageOverlay.style.display = 'block'; // Show overlay and modal container immediately
+                             imageModal.style.display = 'flex'; // Use flex as per CSS
+                             closeModalButton.style.display = 'block';
+
+                             // Hide nav/caption/image while loading
+                             modalCaption.style.display = 'none';
+                             prevImageButton.style.display = 'none';
+                             nextImageButton.style.display = 'none';
+                             zoomedImage.style.display = 'none';
+
+
+                             setTimeout(() => { // Add transitions
+                                imageOverlay.style.opacity = 1;
+                                imageModal.style.opacity = 1;
+                                closeModalButton.style.opacity = 1;
+                             }, 10);
+                            document.body.classList.add('modal-open');
+
+
+                            try {
+                                const detailResponse = await fetch(detailUrl);
+                                if (!detailResponse.ok) {
+                                     throw new Error(`HTTP error fetching detail page! Status: ${detailResponse.status} ${detailResponse.statusText}`);
+                                }
+                                const detailHtmlString = await detailResponse.text();
+                                const detailParser = new DOMParser();
+                                const detailDoc = detailParser.parseFromString(detailHtmlString, 'text/html');
+
+                                // Find all gallery image links on the detail page
+                                // Target <a> tags with data-lightbox="image-1" inside the relevant containers
+                                // Added more specific selectors based on the sample HTML structure
+                                const galleryLinks = detailDoc.querySelectorAll('.searchBox1 a[data-lightbox="image-1"], .alignBtn a[data-lightbox="image-1"]');
+
+                                const fetchedImageUrls = [];
+                                galleryLinks.forEach(link => {
+                                    const href = link.getAttribute('href');
+                                    if (href) {
+                                         // Ensure absolute URL for the fetched image
+                                        if (href.startsWith('/')) {
+                                             fetchedImageUrls.push(`${targetBaseUrl}${href}`);
+                                        } else {
+                                             fetchedImageUrls.push(href); // Assume already absolute if it doesn't start with '/'
+                                        }
+                                    }
+                                });
+
+                                console.log(`Found ${fetchedImageUrls.length} gallery images on detail page.`);
+
+                                if (fetchedImageUrls.length > 0) {
+                                     showImageModal(fetchedImageUrls, drugTitle, 0); // Show the modal with the fetched images, start at index 0
+                                } else {
+                                    // If no images found on detail page, display a message within the modal area
+                                     modalLoadingSpinner.style.display = 'none';
+                                     zoomedImage.style.display = 'none';
+                                     modalCaption.textContent = 'عکسی در صفحه جزئیات یافت نشد.';
+                                     modalCaption.style.display = 'block';
+                                     modalCaption.style.opacity = 1;
+                                     prevImageButton.style.display = 'none';
+                                     nextImageButton.style.display = 'none';
+
+                                     // Keep modal open to show the "not found" message
+                                     currentGalleryImages = []; // Clear any previous gallery data
+                                     currentImageIndex = 0;
+                                }
+
+                            } catch (detailError) {
+                                console.error('Error fetching or parsing detail page:', detailError);
+                                // Hide loading spinner and display an error in the modal area
+                                modalLoadingSpinner.style.display = 'none';
+                                zoomedImage.style.display = 'none'; // Hide image tag
+                                modalCaption.textContent = `خطا در دریافت جزئیات عکس: ${detailError.message}`;
+                                modalCaption.style.display = 'block';
+                                modalCaption.style.opacity = 1;
+                                prevImageButton.style.display = 'none';
+                                nextImageButton.style.display = 'none';
+
+                                // Keep modal open to show the error message
+                                currentGalleryImages = []; // Clear any previous gallery data
+                                currentImageIndex = 0;
+
+                            }
+                        }
+                    });
+
+
+                    // 2. Pagination Link Listeners (only if pagination was rendered)
+                     if (resultDiv.querySelector('.pagination')) {
+                        const newPaginationLinks = resultDiv.querySelectorAll('.pagination a');
+                        newPaginationLinks.forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const page = this.getAttribute('data-page');
+                                const term = this.getAttribute('data-term');
+                                if (page && term) {
+                                    termInput.value = term;
+                                    performSearch(term, parseInt(page));
+                                } else {
+                                    console.error("Could not get page number or term from pagination link data attributes.");
+                                }
+                            });
+                        });
+                    }
+
+                    // 3. Suggestion Link Listeners (if any were rendered)
+                    const newSuggestionLinks = resultDiv.querySelectorAll('.suggestions-list a');
+                    newSuggestionLinks.forEach(link => {
+                         link.addEventListener('click', function(e) {
+                             e.preventDefault();
+                             const suggestedTerm = this.getAttribute('data-suggested-term');
+                             if (suggestedTerm) {
+                                 termInput.value = suggestedTerm;
+                                 performSearch(suggestedTerm);
+                             } else {
+                                 console.error("Could not get suggested term from link data attribute.");
+                             }
+                         });
+                    });
+
+
+                } catch (error) {
+                    console.error('Search failed:', error);
+                    let errorMessage = '<p style="color: red;">مشکل در دریافت یا پردازش نتایج جستجو.</p>';
+
+                    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                         errorMessage += '<p>احتمالاً به دلیل سیاست CORS، امکان دریافت اطلاعات از سایت اصلی وجود ندارد.</p>';
+                         errorMessage += '<p>برای رفع این مشکل نیاز است:</p>';
+                         errorMessage += '<ul><li>کد را روی همان دامنه سایت هدف اجرا کنید، یا</li><li>سرور سایت هدف پیکربندی شود تا درخواست‌های CORS را از دامنه شما مجاز کند، یا</li><li>از یک پروکسی سمت سرور برای دریافت محتوا استفاده کنید.</li></ul>';
+                    } else if (error.message.startsWith('HTTP error!')) {
+                         errorMessage += `<p>${error.message}</p>`;
+                    }
+                     else {
+                        errorMessage += `<p>جزئیات خطا: ${error.message}</p>`;
+                    }
+
+                    resultDiv.innerHTML = errorMessage;
+                    resultDiv.className = 'error';
+                }
+            }
+
+            // Add form submit listener
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const searchTerm = termInput.value.trim();
+
+                if (!searchTerm) {
+                    resultDiv.innerHTML = '<p style="color: red; text-align: center;">لطفاً کلمه کلیدی برای جستجو وارد نمایید!</p>';
+                    resultDiv.className = 'error';
+                    console.log("Search skipped: Empty search term.");
+                    return;
+                }
+
+                performSearch(searchTerm); // Start search from page 1
+            });
+
+            // Add click listeners to modal elements to hide the modal
+            imageOverlay.addEventListener('click', hideImageModal);
+             // close modal when clicking the zoomed image itself (or anywhere on the modal content area)
+            imageModal.addEventListener('click', hideImageModal);
+            closeModalButton.addEventListener('click', hideImageModal);
+             // Add listeners for navigation buttons
+             prevImageButton.addEventListener('click', function(e){ e.stopPropagation(); showPrevImage(); }); // Stop propagation to prevent modal close
+             nextImageButton.addEventListener('click', function(e){ e.stopPropagation(); showNextImage(); }); // Stop propagation
+
+             // Prevent clicks on the spinner/caption from closing the modal
+             modalLoadingSpinner.addEventListener('click', function(e){ e.stopPropagation(); });
+             modalCaption.addEventListener('click', function(e){ e.stopPropagation(); });
+
+
+            // Optional: Close modal with Escape key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && imageModal.style.display === 'flex') { // Check display is flex
+                    hideImageModal();
+                }
+                 // Optional: Navigate images with arrow keys (left/right)
+                 if (imageModal.style.display === 'flex') { // Check display is flex
+                     if (event.key === 'ArrowLeft') { // Left arrow
+                         showPrevImage();
+                     } else if (event.key === 'ArrowRight') { // Right arrow
+                         showNextImage();
+                     }
+                 }
+            });
+
+
+        });
+    </script>
+
+</body>
+</html>
