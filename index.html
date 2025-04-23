@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جستجوی دارو</title>
+    <title>جستجوی دارو - شبیه‌ساز</title>
     <!-- Persian Font: Vazirmatn from cdn.jsdelivr.net -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+     <!-- Font Awesome for Icons (for Copy button) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 
     <!-- Styling -->
     <style>
@@ -53,13 +56,16 @@
         /* Loading spinner positioned within a container */
         .loading-container {
              display: flex;
+             flex-direction: column; /* Stack spinner and message */
              justify-content: center;
              align-items: center;
-             min-height: 100px; /* Ensure some height */
+             min-height: 150px; /* Ensure enough height */
+             font-size: 1.2rem;
+             color: #555;
         }
-        .loading-container .spinner {
-            display: block; /* Show spinner when container has this class */
-        }
+         .loading-container .spinner { margin-bottom: 15px; } /* Space below spinner */
+         .loading-container p { margin: 0; text-align: center; }
+
 
         /* Search Section Styling */
         .subscribe {
@@ -92,8 +98,15 @@
             width: 100%;
             max-width: 600px;
             gap: 15px;
-            position: relative; /* Needed for clear button positioning */
         }
+
+        /* Input and Clear Button Container */
+         .input-with-clear {
+             flex-grow: 1;
+             position: relative;
+             display: flex;
+             align-items: center;
+         }
 
         .subscribe-inputs1 input[type="text"] {
             flex-grow: 1;
@@ -102,36 +115,49 @@
             border-radius: 6px;
             font-size: 1.1rem;
             box-sizing: border-box;
+            /* Remove default browser clear button */
+            &::-ms-clear { display: none; width : 0; height: 0; }
+            &::-webkit-search-cancel-button { display: none; }
             /* Initial direction and alignment handled by JS */
             font-family: Vazirmatn, sans-serif;
-            padding-left: 40px; /* Make space for clear button */
+             /* Padding adjusted by JS based on direction */
         }
 
-         /* Clear Input Button Styling */
-        .clear-input {
-            position: absolute;
-            top: 50%;
-            left: 10px; /* Position on the left */
-            transform: translateY(-50%);
-            font-size: 1.2rem;
-            color: #ccc;
-            cursor: pointer;
-            user-select: none;
-            z-index: 2; /* Above input field */
-            transition: color 0.2s ease;
-            display: none; /* Hidden by default */
-             /* Make it focusable */
-            outline: none;
-             background: none;
-             border: none;
-             padding: 0;
-        }
-        .clear-input:hover {
-            color: #888;
-        }
-         .clear-input:focus {
-              outline: 2px solid #007bff;
-              outline-offset: 2px;
+         .input-with-clear .clear-input {
+             position: absolute;
+             top: 50%;
+             transform: translateY(-50%);
+             font-size: 1.2rem;
+             color: #999;
+             cursor: pointer;
+             display: none;
+             transition: color 0.2s ease;
+             z-index: 2;
+         }
+         /* Positioning for RTL input */
+         .input-with-clear[dir="rtl"] .clear-input {
+             left: auto;
+             right: 10px;
+         }
+         /* Adjust padding for RTL input */
+         .input-with-clear[dir="rtl"] input[type="text"] {
+             padding-left: 18px;
+             padding-right: 35px;
+         }
+          /* Positioning for LTR input */
+         .input-with-clear[dir="ltr"] .clear-input {
+             right: auto;
+             left: 10px;
+         }
+          /* Adjust padding for LTR input */
+          .input-with-clear[dir="ltr"] input[type="text"] {
+              padding-left: 35px;
+              padding-right: 18px;
+          }
+
+
+         .input-with-clear .clear-input:hover {
+             color: #666;
          }
 
 
@@ -148,21 +174,13 @@
             box-sizing: border-box;
             flex-shrink: 0;
         }
-        /* Disabled state styling */
-        .subscribe-inputs1 input[type="submit"]:disabled {
-             background-color: #a0c8f3;
-             cursor: not-allowed;
-             transform: none;
-        }
 
-
-        .subscribe-inputs1 input[type="submit"]:hover:not(:disabled) {
+        .subscribe-inputs1 input[type="submit"]:hover {
             background-color: #0056b3;
         }
-         .subscribe-inputs1 input[type="submit"]:active:not(:disabled) {
+         .subscribe-inputs1 input[type="submit"]:active {
             transform: scale(0.98);
         }
-
 
         /* Results Area Styling */
         #simulationResult {
@@ -296,11 +314,37 @@
 
 
         .drug-card .other-details {
+             /* Initial state for expandable section */
+            max-height: 120px; /* Show a few lines */
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
             border-top: 1px solid #eee;
             padding-top: 20px;
             font-size: 1rem;
             color: #666;
             margin-top: 20px;
+            position: relative; /* For fade effect */
+        }
+         /* Fade effect for partially hidden content */
+        .drug-card .other-details::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px; /* Height of the fade effect */
+            background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
+            pointer-events: none; /* Allow clicking through */
+             /* Hide fade when expanded */
+            opacity: 1;
+             transition: opacity 0.3s ease;
+        }
+
+        .drug-card .other-details.expanded {
+            max-height: 1000px; /* Arbitrarily large to show all content */
+        }
+         .drug-card .other-details.expanded::after {
+            opacity: 0; /* Hide fade when expanded */
         }
 
          .drug-card .detail-row {
@@ -325,17 +369,54 @@
               direction: ltr;
               font-family: Arial, Helvetica, sans-serif;
          }
+         /* Style for the copy button */
+          .detail-row .copy-button {
+              margin-left: 5px;
+              color: #007bff;
+              cursor: pointer;
+              font-size: 0.9em;
+              transition: color 0.2s ease;
+              display: inline-block;
+              vertical-align: middle;
+              position: relative;
+              opacity: 1;
+          }
+           .detail-row .copy-button:hover {
+               color: #0056b3;
+           }
+            /* Tooltip or feedback for copy */
+            .detail-row .copy-button::after {
+                content: 'کپی شد!';
+                position: absolute;
+                right: 50%;
+                transform: translateX(50%);
+                top: -25px;
+                background-color: #5cb85c;
+                color: white;
+                padding: 2px 5px;
+                border-radius: 3px;
+                font-size: 0.7em;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                 pointer-events: none;
+                 white-space: nowrap;
+                 font-family: Vazirmatn, sans-serif;
+                 z-index: 10;
+            }
+             .detail-row .copy-button.copied::after {
+                 opacity: 1;
+             }
 
 
         /* Style for the detail link to look like a button */
         .drug-card .detail-link {
-            display: inline-block; /* Needed for padding and margins */
+            display: inline-block;
             margin-top: 25px;
-            padding: 10px 25px; /* Button-like padding */
-            background-color: #e9ecef; /* Button background */
-            color: #007bff; /* Button text color */
-            text-decoration: none; /* Remove underline */
-            border-radius: 6px; /* Button rounded corners */
+            padding: 10px 25px;
+            background-color: #e9ecef;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 6px;
             font-size: 1rem;
             transition: background-color 0.2s ease-in-out, color 0.2s ease;
             font-weight: 500;
@@ -344,9 +425,39 @@
         }
 
         .drug-card .detail-link:hover {
-            background-color: #dee2e6; /* Darker background on hover */
-            color: #0056b3; /* Darker text color on hover */
+            background-color: #dee2e6;
+            color: #0056b3;
         }
+
+        /* Expand/Collapse Button */
+         .expand-details-button {
+             display: block;
+             width: 100%;
+             text-align: center;
+             background: none;
+             border: none;
+             color: #007bff;
+             cursor: pointer;
+             font-size: 0.9em;
+             margin-top: 10px;
+             padding: 5px;
+             transition: color 0.2s ease;
+             font-family: Vazirmatn, sans-serif;
+         }
+          .expand-details-button:hover {
+              color: #0056b3;
+          }
+           .expand-details-button::after {
+               content: 'نمایش بیشتر';
+           }
+            .expand-details-button.expanded::after {
+                content: 'نمایش کمتر';
+            }
+            /* Hide the button if the content is inherently short */
+             .drug-card .other-details:not(.is-collapsible) + .expand-details-button {
+                 display: none !important;
+             }
+
 
         /* Pagination Styling */
         .pagination-container {
@@ -384,14 +495,6 @@
             font-family: Arial, Helvetica, sans-serif;
             cursor: pointer;
         }
-         /* Disabled state for pagination links */
-        .pagination li.disabled a, .pagination li a:disabled {
-             color: #6c757d;
-             pointer-events: none;
-             background-color: #e9ecef;
-              border-color: #dee2e6;
-         }
-
 
         /* Specific border-radius for RTL */
         .pagination li:first-child a {
@@ -409,18 +512,24 @@
         }
 
 
-        .pagination li a:hover:not(:disabled) {
+        .pagination li a:hover {
             background-color: #e9ecef;
             border-color: #ced4da;
         }
 
-        .pagination li.active a, .pagination li a.active {
+        .pagination li.active a {
             background-color: #007bff;
             border-color: #007bff;
             color: white;
             pointer-events: none;
         }
 
+        .pagination li.disabled a {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #e9ecef;
+             border-color: #dee2e6;
+        }
 
         /* No Results / Suggestions Styling */
         .no-results-container {
@@ -465,9 +574,8 @@
            }
 
         /* --- Modal (Lightbox) Styling --- */
-        /* Removed detail modal specific styles */
 
-        .modal-overlay { /* Used only for Image Modal now */
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -495,7 +603,7 @@
              /* Add a subtle border and shadow */
              border-radius: 8px;
              box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-             background-color: transparent; /* Default background */
+             background-color: transparent;
          }
 
         /* Image Modal Specific Styles */
@@ -503,13 +611,14 @@
             display: flex; /* Use flexbox to center image and spinner */
             justify-content: center;
             align-items: center;
-             background-color: transparent; /* No background for image modal itself */
+             background-color: transparent;
+             flex-direction: column; /* Stack image and mini-map vertically */
+             gap: 15px; /* Space between image area and mini-map */
         }
          #modalLoadingSpinner {
-             /* Styling for the spinner text in image modal */
              color: white;
              font-size: 1.2rem;
-             position: absolute;
+             position: absolute; /* Position relative to the modal */
              top: 50%;
              left: 50%;
              transform: translate(-50%, -50%);
@@ -532,21 +641,14 @@
             padding: 0;
             background: none;
             display: none;
-             /* Make image itself focusable for A11y */
-             outline: none;
         }
-         .zoomed-image:focus {
-             outline: 2px solid #007bff; /* Highlight focused image */
-             outline-offset: 3px;
-         }
-
 
         /* Removed Detail Modal Specific Styles */
         /* #detailModal { ... } */
         /* #detailModal .modal-content-area { ... } */
 
 
-        .modal-close { /* Common close button style - used only for Image Modal now */
+        .modal-close {
             position: fixed;
             top: 15px;
             right: 15px;
@@ -559,16 +661,8 @@
             opacity: 0;
             display: none;
             pointer-events: auto;
-             /* Make close button focusable for A11y */
-             outline: none;
         }
-         .modal-close:focus {
-             outline: 2px solid #007bff;
-         }
-
          /* Removed dark class for close button as only image modal uses the overlay now */
-         /* .modal-close.dark { ... } */
-         /* .modal-close.dark:hover { ... } */
 
 
         .modal-close:hover {
@@ -582,7 +676,7 @@
             top: 50%;
             transform: translateY(-50%);
             z-index: 1055;
-            background-color: rgba(17, 16, 16, 0.2);
+            background-color: rgba(0, 0, 0, 0.2);
             color: #fff;
             border: none;
             padding: 15px;
@@ -599,22 +693,10 @@
              display: flex;
              justify-content: center;
              align-items: center;
-              /* Make nav buttons focusable for A11y */
-             outline: none;
         }
-         .modal-nav-button:focus {
-             outline: 2px solid #007bff;
-         }
-
-        .modal-nav-button:hover:not(:disabled) {
+        .modal-nav-button:hover {
             background-color: rgba(255, 255, 255, 0.4);
         }
-         .modal-nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
-             background-color: rgba(255, 255, 255, 0.1);
-         }
-
 
         .prev-image-button { left: 10px; }
          .next-image-button { right: 10px; }
@@ -637,37 +719,165 @@
              pointer-events: none;
         }
 
+        /* Mini-Map Styling */
+         #modalMiniMap {
+             position: fixed; /* Fixed position relative to viewport */
+             bottom: 60px; /* Position above the caption */
+             left: 0;
+             right: 0;
+             z-index: 1055;
+             display: none; /* Hidden by default */
+             text-align: center;
+             padding: 10px 0;
+             background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+             overflow-x: auto; /* Allow horizontal scrolling */
+             white-space: nowrap; /* Prevent thumbnails from wrapping */
+             scrollbar-width: thin; /* Style scrollbar */
+             scrollbar-color: rgba(255,255,255,0.3) transparent;
+             opacity: 0;
+             transition: opacity 0.3s ease;
+         }
+         /* Style for scrollbar thumb on webkit browsers */
+          #modalMiniMap::-webkit-scrollbar-thumb {
+              background-color: rgba(255,255,255,0.3);
+              border-radius: 10px;
+          }
+           #modalMiniMap::-webkit-scrollbar-track {
+               background: transparent;
+           }
+
+
+         #modalMiniMap img {
+             width: 50px; /* Fixed size for thumbnails */
+             height: 50px;
+             object-fit: cover; /* Crop if necessary to fit square */
+             border: 2px solid transparent; /* Border for active state */
+             margin: 0 5px; /* Space between thumbnails */
+             cursor: pointer;
+             transition: border-color 0.2s ease, transform 0.1s ease;
+             border-radius: 4px;
+             background-color: white; /* White background */
+             padding: 2px; /* Space inside border */
+         }
+
+         #modalMiniMap img.active {
+             border-color: #007bff; /* Highlight active thumbnail */
+             transform: scale(1.1); /* Slightly larger */
+         }
+          #modalMiniMap img:hover {
+              transform: scale(1.05);
+          }
+
+
         /* Sorting Controls Styling */
         .sort-controls {
             margin-bottom: 20px;
-            text-align: left; /* Align controls to the left in RTL */
+            text-align: left;
+             display: flex;
+             align-items: center;
+             gap: 15px;
         }
-         .sort-controls button {
+         .sort-controls label {
+             font-weight: bold;
+         }
+         .sort-controls select {
              padding: 8px 15px;
-             margin-left: 10px; /* Space between buttons in RTL */
-             background-color: #e9ecef;
              border: 1px solid #ced4da;
              border-radius: 4px;
              font-size: 0.9rem;
-             cursor: pointer;
-             transition: background-color 0.2s ease, border-color 0.2s ease;
              font-family: Vazirmatn, sans-serif;
-              /* Make sort buttons focusable for A11y */
-             outline: none;
-         }
-          .sort-controls button:focus {
-             outline: 2px solid #007bff;
+             cursor: pointer;
+              min-width: 150px;
          }
 
-         .sort-controls button:hover:not(.active) {
-             background-color: #dee2e6;
-             border-color: #adb5bd;
+
+        /* Filter Controls Styling */
+        .filter-controls {
+            margin-bottom: 20px;
+            text-align: left;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+             gap: 15px;
+        }
+         .filter-controls .filter-group {
+             display: flex;
+             align-items: center;
+             gap: 5px;
          }
-         .sort-controls button.active {
-             background-color: #007bff;
-             color: white;
-             border-color: #007bff;
+         .filter-controls label {
              font-weight: bold;
+         }
+         .filter-controls select,
+         .filter-controls input[type="text"] {
+             padding: 8px 15px;
+             border: 1px solid #ced4da;
+             border-radius: 4px;
+             font-size: 0.9rem;
+             font-family: Vazirmatn, sans-serif;
+             min-width: 120px;
+         }
+
+
+        /* Highlighted search term */
+         .highlight {
+             background-color: yellow;
+             font-weight: bold;
+             padding: 0 2px;
+             border-radius: 2px;
+         }
+
+         /* Search History Styling */
+        .search-history {
+             margin-top: 20px;
+             padding: 15px;
+             background-color: #fff;
+             border-radius: 8px;
+             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+         .search-history h4 {
+             margin-top: 0;
+             margin-bottom: 10px;
+             color: #1f3a65;
+             font-size: 1.2rem;
+             border-bottom: 1px solid #eee;
+             padding-bottom: 5px;
+         }
+         .search-history ul {
+             list-style: none;
+             padding: 0;
+             margin: 0;
+         }
+         .search-history li {
+             display: inline-block;
+             margin-left: 10px;
+             margin-bottom: 8px;
+         }
+         .search-history li:last-child { margin-left: 0; }
+
+         .search-history li a {
+             background-color: #e9ecef;
+             padding: 5px 10px;
+             border-radius: 4px;
+             text-decoration: none;
+             color: #007bff;
+             font-size: 0.9em;
+             transition: background-color 0.2s ease;
+         }
+         .search-history li a:hover {
+             background-color: #dee2e6;
+         }
+
+        /* Status Indicator Styling */
+         #currentStatusIndicator {
+             font-size: 0.9em;
+             color: #555;
+             text-align: left;
+             margin-bottom: 15px;
+             padding-bottom: 10px;
+             border-bottom: 1px dashed #ddd;
          }
 
 
@@ -689,10 +899,10 @@
               .zoomed-image {
                  max-height: calc(100vh - 110px);
              }
-             /* Removed detail modal responsive padding */
-             /* #detailModal { padding: 20px; max-width: 90%; } */
-             .sort-controls { text-align: center; } /* Center sort controls on smaller screens */
-             .sort-controls button { margin-left: 5px; margin-right: 5px; } /* Adjust margins */
+             .sort-controls { text-align: center; justify-content: center;}
+             .filter-controls { text-align: center; justify-content: center;}
+             .filter-controls .filter-group { margin-left: 10px; margin-right: 10px; }
+             .filter-controls .filter-group:last-child { margin-right: 10px; }
         }
         @media (max-width: 768px) {
              .subscribe-inputs1 form {
@@ -701,8 +911,18 @@
                  gap: 10px;
              }
              .subscribe-inputs1 input[type="text"] {
-                 margin-right: 0;
+                  padding-right: 35px;
+                  padding-left: 35px;
              }
+            .input-with-clear[dir="rtl"] .clear-input {
+                right: 10px;
+                left: auto;
+            }
+             .input-with-clear[dir="ltr"] .clear-input {
+                left: 10px;
+                right: auto;
+             }
+
              .subscribe-inputs1 input[type="submit"] {
                 width: 100%;
              }
@@ -803,9 +1023,7 @@
              .next-image-button { right: 5px; }
              .modal-caption { bottom: 10px; }
 
-             /* Removed detail modal responsive padding */
-             /* #detailModal { padding: 15px; } */
-        }
+         }
 
          @media (max-width: 480px) {
               .subscribe, .drug-card {
@@ -836,6 +1054,36 @@
              .no-results-container h3 {
                  font-size: 1.2rem;
              }
+              /* Stack filter groups */
+              .filter-controls {
+                   flex-direction: column;
+                   align-items: stretch;
+                   gap: 10px;
+              }
+               .filter-controls .filter-group {
+                   flex-direction: column;
+                   align-items: flex-start;
+                   margin-left: 0;
+                   margin-right: 0;
+                   gap: 3px;
+               }
+                .filter-controls .filter-group:last-child {
+                    margin-right: 0;
+                }
+                .filter-controls label {
+                     margin-left: 0;
+                     margin-bottom: 5px;
+                }
+                .filter-controls select,
+                .filter-controls input[type="text"] {
+                     width: 100%;
+                     box-sizing: border-box;
+                     margin-left: 0;
+                }
+                .filter-controls *:last-child {
+                     margin-right: 0;
+                }
+
          }
 
     </style>
@@ -848,18 +1096,32 @@
                 <div class="subscribe-inputs1">
                     <div> داروی مورد نظر را جستجو نمایید</div>
                     <form action="#" method="post">
-                        <input id="Term" name="Term" type="text" value="" placeholder="نام دارو..." aria-label="نام دارو یا کد" />
-                         <button class="clear-input" id="clearInput" aria-label="پاک کردن ورودی">×</button>
-                        <input value="جستجو" type="submit" aria-label="جستجو" />
+                         <!-- Wrap input and add clear button -->
+                        <div class="input-with-clear" id="searchInputElementContainer">
+                            <input id="Term" name="Term" type="text" value="" placeholder="نام دارو..." />
+                            <span class="clear-input" id="clearSearchInput">&times;</span>
+                        </div>
+                        <input value="جستجو" type="submit">
                     </form>
                 </div>
             </div>
         </section>
 
+        <!-- Search History Area -->
+        <div id="searchHistory" class="search-history" style="display: none;">
+             <h4>جستجوهای اخیر</h4>
+             <ul id="searchHistoryList">
+                 <!-- History items will be added here -->
+             </ul>
+        </div>
+
+
         <!-- This div will display the search results, no results message, or pagination -->
         <div id="simulationResult">
              <!-- Main Loading Spinner (added/removed dynamically) -->
+             <!-- Initial Messages -->
             <p id="initialMessage" style="text-align: center;">داروی مورد نظر خود را جستجو کنید.</p>
+            <p id="corsWarning" style="font-size: 0.9em; color: #555; text-align: center;">(توجه: این شبیه‌ساز تلاش می‌کند اطلاعات را از وبسایت خارجی دریافت کند که ممکن است به دلیل سیاست CORS مسدود شود.)</p>
         </div>
     </div>
 
@@ -869,229 +1131,170 @@
     <div id="modalOverlay" class="modal-overlay"></div>
 
     <!-- Image Modal (Lightbox) Structure -->
-    <div id="imageModal" class="app-modal" role="dialog" aria-modal="true" tabindex="-1">
-        <img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image" tabindex="0">
+    <div id="imageModal" class="app-modal">
+         <!-- Main image area -->
+        <img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image">
          <!-- Loading spinner for modal -->
         <div id="modalLoadingSpinner" class="spinner"></div>
          <!-- Navigation buttons -->
-        <button id="prevImageButton" class="modal-nav-button prev-image-button" aria-label="عکس قبلی" tabindex="0">‹</button>
-        <button id="nextImageButton" class="modal-nav-button next-image-button" aria-label="عکس بعدی" tabindex="0">›</button>
+        <button id="prevImageButton" class="modal-nav-button prev-image-button">‹</button>
+        <button id="nextImageButton" class="modal-nav-button next-image-button">›</button>
          <!-- Image count / caption -->
         <div id="modalCaption" class="modal-caption"></div>
+         <!-- Mini-map Area -->
+        <div id="modalMiniMap">
+            <!-- Thumbnails will be added here -->
+        </div>
     </div>
 
      <!-- Removed Detail Modal Structure -->
      <!-- <div id="detailModal" class="app-modal"> ... </div> -->
 
      <!-- Close buttons - one for each modal type - only Image Modal close is needed -->
-     <button id="closeImageModalButton" class="modal-close" aria-label="بستن" tabindex="0">×</button>
+     <span id="closeImageModalButton" class="modal-close">&times;</span>
      <!-- Removed close button for detail modal -->
-     <!-- <span id="closeDetailModalButton" class="modal-close dark">×</span> -->
+     <!-- <span id="closeDetailModalButton" class="modal-close dark">&times;</span> -->
 
 
     <script>
-        // Utility function: Debounce
-        function debounce(func, delay) {
-            let timeoutId;
-            return function(...args) {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => {
-                    func.apply(this, args);
-                }, delay);
-            };
-        }
+        // Basic Modularity: Wrap related functions and elements in objects
+        const ImageModal = {
+            imageOverlay: null,
+            imageModal: null,
+            zoomedImage: null,
+            closeButton: null,
+            prevButton: null,
+            nextButton: null,
+            caption: null,
+            spinner: null,
+            miniMapContainer: null, // New element
 
-        // Utility function: Get Query Parameters
-        function getQueryParams(url) {
-            const queryStartIndex = url.indexOf('?');
-            if (queryStartIndex === -1) return {};
-            const params = {};
-            const queryString = url.substring(queryStartIndex + 1);
-            if (queryString) {
-                try {
-                    const urlParams = new URLSearchParams(queryString);
-                    for (const [key, value] of urlParams) {
-                        params[key] = value;
-                    }
-                } catch(e) {
-                     console.error("Error parsing query string:", queryString, e);
-                }
-            }
-            return params;
-        }
+            currentGalleryImages: [], // Stores URLs of full-size images from detail page
+            currentMiniMapThumbnails: [], // Stores URLs of thumbnail images from detail page
+            currentImageIndex: 0,
+            currentDrugTitle: '',
 
-        // Utility function: Format Price with Commas
-        function addCommas(nStr) {
-            nStr += '';
-            const x = nStr.split('.');
-            let x1 = x[0];
-            const x2 = x.length > 1 ? '.' + x[1] : '';
-            const rgx = /(\d+)(\d{3})/;
-            while (rgx.test(x1)) {
-                x1 = x1.replace(rgx, '$1' + ',' + '$2');
-            }
-            return x1 + x2;
-        }
-
-        // Utility function: Get Iconic Pagination Text
-        function getIconicPaginationText(originalText) {
-            const trimmedText = originalText.trim();
-            if (trimmedText === '>>') return '«';
-            if (trimmedText === '<') return '›';
-            if (trimmedText === '>') return '‹';
-            if (trimmedText === '<<') return '»';
-             if (/^\d+$/.test(trimmedText)) {
-                 return trimmedText;
-             }
-            return originalText;
-        }
-
-
-        // Image Modal Class
-        class ImageModal {
-            constructor() {
-                this.imageOverlay = document.getElementById('modalOverlay');
+            init: function() {
+                this.imageOverlay = document.getElementById('modalOverlay'); // Use common overlay
                 this.imageModal = document.getElementById('imageModal');
                 this.zoomedImage = document.getElementById('zoomedImage');
                 this.closeButton = document.getElementById('closeImageModalButton');
                 this.prevButton = document.getElementById('prevImageButton');
                 this.nextButton = document.getElementById('nextImageButton');
                 this.caption = document.getElementById('modalCaption');
-                this.spinner = document.getElementById('modalLoadingSpinner');
+                this.spinner = document.getElementById('modalLoadingSpinner'); // Found here
+                this.miniMapContainer = document.getElementById('modalMiniMap'); // Get new element
 
-                this.currentGalleryImages = [];
-                this.currentImageIndex = 0;
-                this.currentDrugTitle = '';
-                this.originalFocusedElement = null; // For A11y focus trap
-
-                this.xDown = null; // For swipe tracking
-                this.yDown = null;
-
-                this.attachEventListeners();
-            }
-
-            attachEventListeners() {
-                // Add checks before adding listeners
+                // Add event listeners with checks
                 if (this.imageOverlay) this.imageOverlay.addEventListener('click', this.hide.bind(this));
-                // It's better practice to attach close listeners only to dedicated close elements/overlay,
-                // not the whole modal content div if it contains interactive elements like the image itself.
-                // The image gets its own click listener below that calls hide.
-                // if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this));
+                if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this)); // Close on modal background click
                 if (this.closeButton) this.closeButton.addEventListener('click', this.hide.bind(this));
-                if (this.prevButton) this.prevButton.addEventListener('click', (e) => { e.stopPropagation(); this.showPrev(); });
-                if (this.nextButton) this.nextButton.addEventListener('click', (e) => { e.stopPropagation(); this.showNext(); });
+                if (this.prevButton) this.prevButton.addEventListener('click', function(e){ e.stopPropagation(); this.showPrev(); }.bind(this));
+                if (this.nextButton) this.nextButton.addEventListener('click', function(e){ e.stopPropagation(); this.showNext(); }.bind(this));
 
-                 // Prevent clicks on image, spinner, caption from closing the modal via overlay click
-                if (this.zoomedImage) this.zoomedImage.addEventListener('click', (e) => { e.stopPropagation(); this.hide(); }); // Allow clicking image to close
-                if (this.spinner) this.spinner.addEventListener('click', (e) => { e.stopPropagation(); });
-                if (this.caption) this.caption.addEventListener('click', (e) => { e.stopPropagation(); });
+                 // Prevent clicks on image, nav buttons, spinner, caption from closing the modal via modal background click
+                if (this.zoomedImage) this.zoomedImage.addEventListener('click', function(e){ e.stopPropagation(); });
+                if (this.spinner) this.spinner.addEventListener('click', function(e){ e.stopPropagation(); });
+                if (this.caption) this.caption.addEventListener('click', function(e){ e.stopPropagation(); });
+                if (this.miniMapContainer) this.miniMapContainer.addEventListener('click', this.handleMiniMapClick.bind(this)); // Add listener for mini-map clicks
 
 
-                // Add keyboard navigation (Escape, Left/Right arrows, Focus Trap)
+                // Add keyboard navigation (Escape, Left/Right arrows)
                 document.addEventListener('keydown', this.handleKeydown.bind(this));
 
                  // Add swipe gestures for touch devices
-                 if (this.imageModal) {
-                    this.imageModal.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
-                    this.imageModal.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
-                    this.imageModal.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
+                 if (this.imageModal) this.imageModal.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
+                 if (this.imageModal) this.imageModal.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
+                 if (this.imageModal) this.imageModal.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
+
+                 this.xDown = null; // For swipe tracking
+                 this.yDown = null;
+            },
+
+             // Handle clicks on mini-map thumbnails
+             handleMiniMapClick: function(event) {
+                 const clickedThumbnail = event.target.closest('img');
+                  if (clickedThumbnail) {
+                      const index = parseInt(clickedThumbnail.getAttribute('data-index'));
+                       if (!isNaN(index) && index !== this.currentImageIndex) {
+                           this.jumpToImage(index); // Jump to the clicked image
+                       }
+                  }
+             },
+
+            handleTouchStart: function(evt) {
+                 if (this.imageModal && this.imageModal.style.display === 'flex') {
+                    this.xDown = evt.touches[0].clientX;
+                    this.yDown = evt.touches[0].clientY;
                  }
-            }
+            },
 
-            handleTouchStart(evt) {
-                 if (!this.imageModal || this.imageModal.style.display !== 'flex') return;
-                 this.xDown = evt.touches[0].clientX;
-                 this.yDown = evt.touches[0].clientY;
-            }
+            handleTouchMove: function(evt) {
+                 if (this.imageModal && this.imageModal.style.display === 'flex') {
+                    if (this.xDown !== null && this.yDown !== null) {
+                        const xDiff = this.xDown - evt.touches[0].clientX;
+                        const yDiff = this.yDown - evt.touches[0].clientY;
 
-            handleTouchMove(evt) {
-                 if (!this.imageModal || this.imageModal.style.display !== 'flex' || (!this.xDown && !this.yDown)) {
+                        if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                            evt.preventDefault();
+                        }
+                    }
+                 }
+            },
+
+            handleTouchEnd: function(evt) {
+                 if (this.imageModal && this.imageModal.style.display !== 'flex' || (!this.xDown && !this.yDown)) {
                      return;
                  }
-                 const xDiff = this.xDown - evt.touches[0].clientX;
-                 const yDiff = this.yDown - evt.touches[0].clientY;
-                 if (Math.abs(xDiff) > Math.abs(yDiff)) {
-                    evt.preventDefault();
-                 }
-            }
 
-            handleTouchEnd(evt) {
-                 if (!this.imageModal || this.imageModal.style.display !== 'flex' || (!this.xDown && !this.yDown)) {
-                     return;
-                 }
                  const xUp = evt.changedTouches[0].clientX;
                  const yUp = evt.changedTouches[0].clientY;
+
                  const xDiff = this.xDown - xUp;
                  const yDiff = this.yDown - yUp;
+
                  this.xDown = null;
                  this.yDown = null;
-                 const sensitivity = 50;
-                 if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > sensitivity) {
-                    if (xDiff > 0) { this.showNext(); } else { this.showPrev(); }
-                 }
-            }
 
-            handleKeydown(event) {
+                 const sensitivity = 50;
+
+                 if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                     if (Math.abs(xDiff) > sensitivity) {
+                        if (xDiff > 0) {
+                            this.showNext();
+                        } else {
+                            this.showPrev();
+                        }
+                     }
+                 }
+            },
+
+            handleKeydown: function(event) {
                 if (this.imageModal && this.imageModal.style.display === 'flex') {
                     if (event.key === 'Escape') {
-                        event.preventDefault();
                         this.hide();
-                    } else if (event.key === 'ArrowLeft') { // Left arrow (RTL prev)
+                    } else if (event.key === 'ArrowLeft') {
                          event.preventDefault();
                          this.showPrev();
-                    } else if (event.key === 'ArrowRight') { // Right arrow (RTL next)
+                    } else if (event.key === 'ArrowRight') {
                          event.preventDefault();
                          this.showNext();
-                    } else if (event.key === 'Tab') { // Focus trap
-                         this.handleFocusTrap(event);
                     }
                 }
-            }
-
-            handleFocusTrap(event) {
-                 if (!this.imageModal) return;
-
-                 const focusableElements = this.imageModal.querySelectorAll(
-                     'button:not([disabled]), [href]:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
-                 );
-                // Filter for elements that are actually visible
-                const visibleFocusableElements = Array.from(focusableElements).filter(el => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement);
+            },
 
 
-                if (visibleFocusableElements.length === 0) return; // No focusable elements
-
-                 const firstFocusableElement = visibleFocusableElements[0];
-                 const lastFocusableElement = visibleFocusableElements[visibleFocusableElements.length - 1];
-
-                 if (event.shiftKey) { // Shift + Tab
-                     if (document.activeElement === firstFocusableElement) {
-                         lastFocusableElement.focus();
-                         event.preventDefault();
-                     }
-                 } else { // Tab
-                     if (document.activeElement === lastFocusableElement) {
-                         firstFocusableElement.focus();
-                         event.preventDefault();
-                     }
-                 }
-            }
-
-
-            show(galleryImages, drugTitle, initialIndex = 0) {
+            show: function(galleryImages, thumbnailImages, drugTitle, initialIndex = 0) { // Added thumbnailImages parameter
                 this.currentGalleryImages = galleryImages || [];
+                this.currentMiniMapThumbnails = thumbnailImages || []; // Store thumbnail URLs
                 this.currentImageIndex = initialIndex;
                 this.currentDrugTitle = drugTitle || '';
 
-                 // Ensure elements exist
-                if (!this.imageOverlay || !this.imageModal || !this.closeButton || !this.caption || !this.prevButton || !this.nextButton || !this.zoomedImage || !this.spinner) {
+                if (!this.imageOverlay || !this.imageModal || !this.closeButton || !this.caption || !this.prevButton || !this.nextButton || !this.zoomedImage || !this.spinner || !this.miniMapContainer) {
                      console.error("ImageModal elements not initialized correctly.");
                      return;
                 }
 
-                // Store the currently focused element before showing modal
-                this.originalFocusedElement = document.activeElement;
-
-                // Set initial display state
                 this.imageOverlay.style.display = 'block';
                 this.imageModal.style.display = 'flex';
                 this.closeButton.classList.remove('dark');
@@ -1099,102 +1302,96 @@
                 this.caption.style.display = 'none';
                 this.prevButton.style.display = 'none';
                 this.nextButton.style.display = 'none';
+                this.miniMapContainer.style.display = 'none'; // Hide mini-map initially
 
-
-                // Show opacity transition
                 setTimeout(() => {
                     this.imageOverlay.style.opacity = 1;
                     this.imageModal.style.opacity = 1;
                     this.closeButton.style.opacity = 1;
-                    // Move focus to the modal itself or its first focusable element
-                    // Focusing the modal container is a common pattern for trapping focus
-                    this.imageModal.focus();
                 }, 10);
 
-                document.body.classList.add('modal-open'); // Prevent body scroll
+                document.body.classList.add('modal-open');
 
-                // Load and display the first image
-                this.displayCurrent();
-            }
+                // Render and display the first image + mini-map
+                this.renderMiniMap(); // Render mini-map
+                this.displayCurrent(); // Display first image and update mini-map active state
+            },
 
-            hide() {
-                 // Ensure elements exist
-                 if (!this.imageOverlay || !this.imageModal || !this.closeButton || !this.caption || !this.prevButton || !this.nextButton || !this.zoomedImage || !this.spinner) {
+            hide: function() {
+                 if (!this.imageOverlay || !this.imageModal || !this.closeButton || !this.caption || !this.prevButton || !this.nextButton || !this.zoomedImage || !this.spinner || !this.miniMapContainer) {
                      console.error("ImageModal elements not initialized correctly, cannot hide.");
                      return;
                 }
 
-                // Hide opacity transition
                 this.imageOverlay.style.opacity = 0;
                 this.imageModal.style.opacity = 0;
                 this.closeButton.style.opacity = 0;
                 this.caption.style.opacity = 0;
-                if (this.prevButton) this.prevButton.style.opacity = 0; // Add check
-                if (this.nextButton) this.nextButton.style.opacity = 0; // Add check
+                this.prevButton.style.opacity = 0;
+                this.nextButton.style.opacity = 0;
+                this.miniMapContainer.style.opacity = 0; // Fade out mini-map
 
-
-                // Hide elements after transition completes
                 setTimeout(() => {
                     this.imageOverlay.style.display = 'none';
                     this.imageModal.style.display = 'none';
                     this.closeButton.style.display = 'none';
                     this.caption.style.display = 'none';
-                    if (this.prevButton) this.prevButton.style.display = 'none'; // Add check
-                    if (this.nextButton) this.nextButton.style.display = 'none'; // Add check
+                    this.prevButton.style.display = 'none';
+                    this.nextButton.style.display = 'none';
+                    this.miniMapContainer.style.display = 'none'; // Hide mini-map
 
-
-                    this.zoomedImage.src = ''; // Clear image src
+                    this.zoomedImage.src = '';
                     this.zoomedImage.alt = '';
                     this.spinner.style.display = 'none';
-                    this.zoomedImage.style.display = 'block'; // Reset img display state
+                    this.zoomedImage.style.display = 'block';
 
-                    this.currentGalleryImages = []; // Clear gallery state
+                    this.currentGalleryImages = [];
+                    this.currentMiniMapThumbnails = []; // Clear thumbnail list
                     this.currentImageIndex = 0;
                     this.currentDrugTitle = '';
+                    this.miniMapContainer.innerHTML = ''; // Clear mini-map thumbnails
 
                     document.body.classList.remove('modal-open');
+                }, 300);
+            },
 
-                    // Return focus to the element that was focused before the modal opened
-                    if (this.originalFocusedElement) {
-                        this.originalFocusedElement.focus();
-                        this.originalFocusedElement = null;
-                    }
-                }, 300); // Match CSS transition duration
-            }
+             // New method to jump to a specific image by index
+             jumpToImage: function(index) {
+                  if (index >= 0 && index < this.currentGalleryImages.length) {
+                      this.currentImageIndex = index;
+                      this.displayCurrent();
+                  }
+             },
 
-            displayCurrent() {
-                 // Ensure elements exist
-                if (!this.zoomedImage || !this.spinner || !this.caption || !this.prevButton || !this.nextButton) {
+            displayCurrent: function() {
+                if (!this.zoomedImage || !this.spinner || !this.caption || !this.prevButton || !this.nextButton || !this.miniMapContainer) {
                      console.error("ImageModal display elements not initialized correctly.");
                      return;
                 }
 
-                this.spinner.style.display = 'block'; // Show spinner
-                this.zoomedImage.style.display = 'none'; // Hide image while loading
-                this.caption.style.opacity = 0; // Hide caption
-                this.prevButton.style.opacity = 0; // Hide nav
-                this.nextButton.style.opacity = 0;
-
-                // Disable nav buttons while image is loading
-                 if (this.prevButton) this.prevButton.disabled = true;
-                 if (this.nextButton) this.nextButton.disabled = true;
-
+                if (this.spinner) this.spinner.style.display = 'block';
+                if (this.zoomedImage) this.zoomedImage.style.display = 'none';
+                if (this.caption) this.caption.style.opacity = 0;
+                if (this.prevButton) this.prevButton.style.opacity = 0;
+                if (this.nextButton) this.nextButton.style.opacity = 0;
+                 if (this.miniMapContainer) this.miniMapContainer.style.opacity = 0; // Hide mini-map temporarily
 
                 if (this.currentGalleryImages.length > 0 && this.currentImageIndex >= 0 && this.currentImageIndex < this.currentGalleryImages.length) {
                     const imageUrl = this.currentGalleryImages[this.currentImageIndex];
                     this.zoomedImage.src = imageUrl;
                     this.zoomedImage.alt = this.currentDrugTitle || 'Image';
 
-                    // Use a temporary Image object to check load/error status reliably
                     const tempImg = new Image();
                     tempImg.onload = () => {
                          if (this.spinner) this.spinner.style.display = 'none';
                          if (this.zoomedImage) {
                              this.zoomedImage.style.display = 'block';
-                             this.zoomedImage.src = tempImg.src; // Set source after load
+                             this.zoomedImage.src = tempImg.src;
                          }
 
-                         // Show caption and nav buttons after image loads and modal is visible
+                         // Update active thumbnail and scroll mini-map
+                         this.updateMiniMapActiveState();
+
                          setTimeout(() => {
                              if (this.caption) {
                                   this.caption.textContent = `${this.currentImageIndex + 1} از ${this.currentGalleryImages.length}`;
@@ -1202,12 +1399,13 @@
                                   this.caption.style.opacity = 1;
                              }
                               if (this.currentGalleryImages.length > 1) {
-                                   // Use flex display for buttons with icon centering
-                                   if (this.prevButton) { this.prevButton.style.display = 'flex'; this.prevButton.style.opacity = 1; this.prevButton.disabled = false; }
-                                   if (this.nextButton) { this.nextButton.style.display = 'flex'; this.nextButton.style.opacity = 1; this.nextButton.disabled = false; }
+                                   if (this.prevButton) { this.prevButton.style.display = 'flex'; this.prevButton.style.opacity = 1; }
+                                   if (this.nextButton) { this.nextButton.style.display = 'flex'; this.nextButton.style.opacity = 1; }
                               }
-                             // Preload next/prev images
-                             this.preloadImages();
+                              if (this.miniMapContainer && this.currentMiniMapThumbnails.length > 0) { // Show mini-map if there are thumbnails
+                                   this.miniMapContainer.style.display = 'block'; // Ensure block display for scrolling
+                                  setTimeout(() => { this.miniMapContainer.style.opacity = 1; }, 50); // Small delay for fade-in
+                              }
                          }, 50);
 
                     };
@@ -1221,14 +1419,11 @@
                          }
                          if (this.prevButton) this.prevButton.style.display = 'none';
                          if (this.nextButton) this.nextButton.style.display = 'none';
-
-                         // Ensure nav buttons are enabled (or hidden) even on error
-                         if (this.prevButton) this.prevButton.disabled = false;
-                         if (this.nextButton) this.nextButton.disabled = false;
+                          if (this.miniMapContainer) this.miniMapContainer.style.display = 'none'; // Hide mini-map on error
 
                          console.error('Failed to load image:', imageUrl);
                     };
-                    tempImg.src = imageUrl; // Start loading
+                    tempImg.src = imageUrl;
 
 
                 } else {
@@ -1238,179 +1433,259 @@
                     if (this.prevButton) this.prevButton.style.display = 'none';
                     if (this.nextButton) this.nextButton.style.display = 'none';
                     if (this.spinner) this.spinner.style.display = 'none';
-
-                    // Ensure nav buttons are disabled if no images
-                    if (this.prevButton) this.prevButton.disabled = true;
-                    if (this.nextButton) this.nextButton.disabled = true;
+                    if (this.miniMapContainer) this.miniMapContainer.style.display = 'none';
                 }
-            }
+            },
 
-            showNext() {
+             // New method to render the mini-map thumbnails
+             renderMiniMap: function() {
+                 if (!this.miniMapContainer || !this.currentMiniMapThumbnails) return;
+
+                 this.miniMapContainer.innerHTML = ''; // Clear previous thumbnails
+
+                 if (this.currentMiniMapThumbnails.length > 0) {
+                      this.currentMiniMapThumbnails.forEach((thumbUrl, index) => {
+                           const thumbImg = document.createElement('img');
+                           thumbImg.src = thumbUrl;
+                           thumbImg.alt = `Thumbnail ${index + 1}`;
+                           thumbImg.setAttribute('data-index', index); // Store index for click handler
+                           thumbImg.loading = 'lazy'; // Lazy load thumbnails
+
+                           this.miniMapContainer.appendChild(thumbImg);
+                      });
+                      // Show mini-map container here, but opacity fade is in displayCurrent
+                      // this.miniMapContainer.style.display = 'block';
+                 } else {
+                      this.miniMapContainer.style.display = 'none'; // Hide container if no thumbnails
+                 }
+             },
+
+             // New method to update active state and scroll mini-map
+             updateMiniMapActiveState: function() {
+                 if (!this.miniMapContainer) return;
+
+                 const thumbnails = this.miniMapContainer.querySelectorAll('img');
+                 if (thumbnails.length === 0) return;
+
+                 thumbnails.forEach((thumb, index) => {
+                     if (index === this.currentImageIndex) {
+                          thumb.classList.add('active');
+                          // Scroll the container to make the active thumbnail visible
+                          thumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                     } else {
+                          thumb.classList.remove('active');
+                     }
+                 });
+             },
+
+
+            showNext: function() {
                  if (this.currentGalleryImages.length <= 1) return;
                  this.currentImageIndex = (this.currentImageIndex + 1) % this.currentGalleryImages.length;
                  this.displayCurrent();
-            }
+            },
 
-            showPrev() {
+            showPrev: function() {
                  if (this.currentGalleryImages.length <= 1) return;
                  this.currentImageIndex = (this.currentImageIndex - 1 + this.currentGalleryImages.length) % this.currentGalleryImages.length;
                  this.displayCurrent();
             }
-
-             // Preloading
-             preloadImages() {
-                 if (this.currentGalleryImages.length <= 1) return;
-                 const nextIndex = (this.currentImageIndex + 1) % this.currentGalleryImages.length;
-                 const prevIndex = (this.currentImageIndex - 1 + this.currentGalleryImages.length) % this.currentGalleryImages.length;
-
-                 // Preload next image
-                 const nextImg = new Image();
-                 nextImg.src = this.currentGalleryImages[nextIndex];
-                 // console.log('Preloading next image:', nextImg.src);
-
-                 // Preload previous image
-                 const prevImg = new Image();
-                 prevImg.src = this.currentGalleryImages[prevIndex];
-                 // console.log('Preloading previous image:', prevImg.src);
-             }
-        }
+        };
 
 
-        // Search Application Class
-        class SearchApp {
-            constructor() {
+        // Removed DetailModal object entirely (as requested to revert action)
+
+
+        const SearchApp = {
+            searchForm: null,
+            termInput: null,
+            resultDiv: null,
+             mainLoadingSpinner: null, // Will hold reference to dynamically created spinner
+             initialMessage: null,
+             corsWarning: null,
+             clearInputButton: null, // Reference to the new clear button
+             searchHistoryDiv: null, // Reference to the history div
+             searchHistoryListUl: null, // Reference to the history list
+             statusIndicator: null, // Reference to the status indicator div
+             ownerFilterSelect: null, // Reference to the owner filter select
+             sortSelect: null, // Reference to the sort select
+
+
+             // State variables for sorting and filtering
+             currentSortKey: 'none',
+             currentSortDirection: 'asc', // Default direction for 'none' doesn't strictly matter
+             currentFilterKey: 'owner',
+             currentFilterValue: 'all',
+
+             allResultsOnCurrentPage: [], // Store the list item elements for client-side sorting/filtering
+
+             // Constants
+             LOCAL_STORAGE_HISTORY_KEY: 'drugSearchHistory',
+             MAX_HISTORY_ITEMS: 5,
+
+
+            targetBaseUrl: 'https://irc.fda.gov.ir',
+            searchEndpoint: '/nfi/Search',
+
+            init: function() {
                 this.searchForm = document.querySelector('#subscribe .subscribe-inputs1 form');
                 this.termInput = document.getElementById('Term');
-                this.clearInputButton = document.getElementById('clearInput');
                 this.resultDiv = document.getElementById('simulationResult');
-                this.initialMessage = document.getElementById('initialMessage');
-                this.corsWarning = document.getElementById('corsWarning');
-                 this.mainLoadingSpinner = null;
+                 this.initialMessage = document.getElementById('initialMessage');
+                 this.corsWarning = document.getElementById('corsWarning');
+                 this.clearInputButton = document.getElementById('clearSearchInput');
+                 this.searchHistoryDiv = document.getElementById('searchHistory');
+                 this.searchHistoryListUl = document.getElementById('searchHistoryList');
+                 // Status indicator, owner filter, sort select are added dynamically in renderResults
 
-                 this.currentSortKey = 'none';
-                 this.currentSortDirection = 'asc';
 
-                this.targetBaseUrl = 'https://irc.fda.gov.ir';
-                this.searchEndpoint = '/nfi/Search';
+                // Initialize only ImageModal
+                ImageModal.init();
 
-                // Create instance of ImageModal
-                this.ImageModal = new ImageModal();
-
+                // Attach main event listeners
                 this.attachEventListeners();
-                 this.handleInitialState();
-                 this.handleInputDirection();
 
-                 // Debounce the input event listener
-                 if (this.termInput) {
-                    const debouncedInputHandler = debounce(this.handleInputDirection.bind(this), 250);
-                    this.termInput.addEventListener('input', debouncedInputHandler);
+                 // Load and display search history on init
+                 this.loadSearchHistory();
 
-                    // Show/hide clear button based on input value
-                     this.termInput.addEventListener('input', this.toggleClearButton.bind(this));
-                     this.toggleClearButton(); // Call initially
-                 }
+                 // Handle initial state of input direction AND clear button visibility
+                if (this.termInput) {
+                    this.handleInputDirection(); // Set initial direction
+                    this.handleClearButtonVisibility(); // Set initial visibility
+
+                    this.termInput.addEventListener('input', this.handleInputDirection.bind(this)); // Add listener for direction
+                    this.termInput.addEventListener('input', this.handleClearButtonVisibility.bind(this)); // Add listener for clear button visibility
+                }
+
+                 // Add click listener for the custom clear button
                  if (this.clearInputButton) {
-                    this.clearInputButton.addEventListener('click', this.handleClearInput.bind(this));
+                     this.clearInputButton.addEventListener('click', this.handleClearInputClick.bind(this));
                  }
 
-                 // Handle browser back/forward button (History API)
-                 window.addEventListener('popstate', this.handlePopState.bind(this));
-            }
 
-             handleInitialState() {
-                 // Check URL parameters on page load
+                 // Check for initial search query in URL
                  const urlParams = getQueryParams(window.location.search);
                  const initialTerm = urlParams['Term'] || '';
                  const initialPage = urlParams['PageNumber'] ? parseInt(urlParams['PageNumber']) : 1;
-                 // Note: Initial sort from URL is not implemented in this version
+                 // Note: Not handling initial sort/filter from URL for simplicity in this step
 
                  if (initialTerm) {
-                     if (this.termInput) this.termInput.value = initialTerm;
-                     this.performSearch(initialTerm, initialPage, false); // Perform search but don't push state again
+                     if(this.termInput) this.termInput.value = initialTerm; // Set input value from URL
+                      this.handleInputDirection(); // Update input direction for initial term
+                      this.handleClearButtonVisibility(); // Update clear button visibility
+                     this.performSearch(initialTerm, initialPage); // Perform search on load
                  } else {
-                    // Show initial messages if no term in URL
-                     if (this.initialMessage) this.initialMessage.style.display = 'block';
-                     if (this.corsWarning) this.corsWarning.style.display = 'block';
+                      // Initially show messages if no search is performed on load
+                      this.showInitialMessages();
                  }
-             }
 
-             handlePopState(event) {
-                // Handle browser back/forward buttons
-                 console.log("Popstate triggered", event.state);
-                 const state = event.state;
+                 // Add popstate listener for browser back/forward
+                 window.addEventListener('popstate', this.handlePopstate.bind(this));
+            },
 
-                 if (state && state.term) {
-                     // Update input and perform search based on history state
-                     if (this.termInput) this.termInput.value = state.term;
-                     this.performSearch(state.term, state.page || 1, false); // Don't push state again
-                 } else {
-                    // If no state (e.g., back to initial page), clear results and show initial message
-                     if (this.resultDiv) this.resultDiv.innerHTML = '';
-                     if (this.initialMessage) this.initialMessage.style.display = 'block';
-                     if (this.corsWarning) this.corsWarning.style.display = 'block';
-                     if (this.termInput) this.termInput.value = '';
-                     // Reset sort state? Depends on desired behavior
+             showInitialMessages: function() {
+                  if (this.initialMessage) this.initialMessage.style.display = 'block';
+                  if (this.corsWarning) this.corsWarning.style.display = 'block';
+                   if (this.mainLoadingSpinner && this.mainLoadingSpinner.parentElement === this.resultDiv) {
+                       this.mainLoadingSpinner.remove();
+                   }
+                  this.resultDiv.classList.remove('loading-container', 'error');
+                  // Hide status indicator in initial state
+                   const statusIndicator = this.resultDiv.querySelector('#currentStatusIndicator');
+                    if(statusIndicator) statusIndicator.style.display = 'none';
+             },
+
+             handlePopstate: function(event) {
+                 const urlParams = getQueryParams(window.location.search);
+                 const poppedTerm = urlParams['Term'] || '';
+                 const poppedPage = urlParams['PageNumber'] ? parseInt(urlParams['PageNumber']) : 1;
+
+                 const currentTerm = this.termInput ? this.termInput.value.trim() : '';
+                 const currentPage = getQueryParams(window.location.search)['PageNumber'] || 1;
+
+                 if (poppedTerm !== currentTerm || poppedPage !== parseInt(currentPage)) {
+                     if (this.termInput) this.termInput.value = poppedTerm;
+                     this.handleInputDirection();
+                     this.handleClearButtonVisibility();
+                     // Reset sort and filter state when navigating history
                      this.currentSortKey = 'none';
                      this.currentSortDirection = 'asc';
+                     this.currentFilterKey = 'owner';
+                     this.currentFilterValue = 'all';
+                     this.performSearch(poppedTerm, poppedPage);
+                 } else if (!poppedTerm && currentTerm) {
+                     if (this.termInput) this.termInput.value = '';
+                     this.resultDiv.innerHTML = '';
+                      this.showInitialMessages();
                  }
-             }
+             },
 
 
-             // Handle input direction based on characters
-            handleInputDirection() {
+             // Method to handle input direction based on characters
+            handleInputDirection: function() {
                 if (!this.termInput) return;
+
                 const value = this.termInput.value;
                 const rtlRegex = /[\u0600-\u06FF]/;
+                 const inputContainer = this.termInput.parentElement;
+
                 if (rtlRegex.test(value)) {
                     this.termInput.style.direction = 'rtl';
                     this.termInput.style.textAlign = 'right';
+                     if (inputContainer) inputContainer.setAttribute('dir', 'rtl');
                 } else {
                     this.termInput.style.direction = 'ltr';
                     this.termInput.style.textAlign = 'left';
+                     if (inputContainer) inputContainer.setAttribute('dir', 'ltr');
                 }
-            }
+            },
 
-             // Show/hide clear button based on input value
-             toggleClearButton() {
-                 if (this.clearInputButton && this.termInput) {
-                     if (this.termInput.value.length > 0) {
-                         this.clearInputButton.style.display = 'block';
-                     } else {
-                         this.clearInputButton.style.display = 'none';
-                     }
+            // Method to show/hide the clear button
+             handleClearButtonVisibility: function() {
+                 if (!this.termInput || !this.clearInputButton) return;
+                 if (this.termInput.value.length > 0) {
+                     this.clearInputButton.style.display = 'block';
+                 } else {
+                     this.clearInputButton.style.display = 'none';
                  }
-             }
+             },
 
-             // Handle click on clear button
-             handleClearInput() {
-                 if (this.termInput) {
-                     this.termInput.value = ''; // Clear the input
-                     this.handleInputDirection(); // Reset direction
-                     this.toggleClearButton(); // Hide button
+             // Method to clear the input field
+             handleClearInputClick: function() {
+                 if (!this.termInput) return;
+                 this.termInput.value = '';
+                 const inputEvent = new Event('input', { bubbles: true });
+                 this.termInput.dispatchEvent(inputEvent);
+                 this.termInput.focus();
 
-                     // Reset the view to the initial state
-                     if (this.resultDiv) this.resultDiv.innerHTML = '';
-                     if (this.initialMessage) this.initialMessage.style.display = 'block';
-                     if (this.corsWarning) this.corsWarning.style.display = 'block';
-                      // Reset sort state
-                     this.currentSortKey = 'none';
-                     this.currentSortDirection = 'asc';
-
-
-                     // Update history to initial state URL
-                     history.pushState({}, '', window.location.pathname);
-                 }
-             }
+                  this.resultDiv.innerHTML = '';
+                  this.showInitialMessages();
+                 history.pushState({}, '', window.location.pathname);
+                  // Reset sort and filter state
+                 this.currentSortKey = 'none';
+                 this.currentSortDirection = 'asc';
+                 this.currentFilterKey = 'owner';
+                 this.currentFilterValue = 'all';
+                  this.allResultsOnCurrentPage = [];
+             },
 
 
-            attachEventListeners() {
+            attachEventListeners: function() {
                  if (this.searchForm) this.searchForm.addEventListener('submit', this.handleSearchSubmit.bind(this));
 
                  // Event Delegation for dynamically added content inside resultDiv
                  if (this.resultDiv) this.resultDiv.addEventListener('click', this.handleResultAreaClick.bind(this));
-            }
 
-             handleSearchSubmit(event) {
+                 // Event Delegation for search history items
+                 if (this.searchHistoryListUl) this.searchHistoryListUl.addEventListener('click', this.handleHistoryItemClick.bind(this));
+
+                 // Add change listener for the filter/sort selects after they are potentially added in renderResults
+                 if (this.resultDiv) this.resultDiv.addEventListener('change', this.handleFilterChange.bind(this)); // Catch all changes on selects
+                 // The handleSortChange and handleFilterChange methods will check the event target
+
+            },
+
+             handleSearchSubmit: function(event) {
                 event.preventDefault();
                 const searchTerm = this.termInput ? this.termInput.value.trim() : '';
 
@@ -1423,30 +1698,52 @@
                     console.log("Search skipped: Empty search term.");
                     return;
                 }
-                 // Reset sort when performing a new search
+                 // Reset sort and filter when performing a new search
                  this.currentSortKey = 'none';
                  this.currentSortDirection = 'asc';
+                 this.currentFilterKey = 'owner';
+                 this.currentFilterValue = 'all';
 
-                this.performSearch(searchTerm); // Start search from page 1
-            }
+                this.performSearch(searchTerm);
+                 this.saveSearchTermToHistory(searchTerm);
+             },
 
-            handleResultAreaClick(event) {
+             handleResultAreaClick: async function(event) {
                  const clickedImageContainer = event.target.closest('.drug-card .card-image');
                  const clickedSuggestionLink = event.target.closest('.suggestions-list a');
-                 const clickedSortButton = event.target.closest('.sort-controls button');
-                 // Pagination links are handled by their specific listeners attached after rendering
+                 const clickedExpandButton = event.target.closest('.expand-details-button');
+                 const clickedCopyButton = event.target.closest('.copy-button');
+                 // Clicks on selects and pagination links are handled by their specific listeners / change event listener
+
 
                  if (clickedImageContainer) {
                     event.preventDefault();
                     const detailUrl = clickedImageContainer.getAttribute('data-detail-url');
                     const drugTitle = clickedImageContainer.getAttribute('data-drug-title');
 
-                    if (!detailUrl || detailUrl === '#' || detailUrl === `${this.targetBaseUrl}#`) {
-                        console.warn("No valid detail URL found for this item to fetch images.");
-                        return;
+                     // Added extraction of thumbnail URLs
+                     const thumbnailUrls = [];
+                     // Find the thumbnail img within the clicked container if it exists
+                     const thumbnailImg = clickedImageContainer.querySelector('img');
+                     if (thumbnailImg) {
+                         const thumbUrl = thumbnailImg.getAttribute('src');
+                          // Note: We might want the other thumbnails from the detail page here instead.
+                          // To do that, we'd need to fetch the detail page *first* inside this
+                          // click handler, then extract all thumbnails and full images from there.
+                          // This complicates the flow significantly. For simplicity, let's initially
+                          // just fetch the *full* image URLs from the detail page (as before)
+                          // and use the *same* full image URLs scaled down for the mini-map.
+                          // A more robust version would fetch detail page, get both full & thumbnail URLs.
+                          // For now, let's stick to fetching full URLs and using them for both.
+
+                          // Reverting to fetching detail page first to get all images as planned originally:
+                          await this.fetchAndShowImageModal(detailUrl, drugTitle); // Logic moved to separate function
+
+
+                    } else {
+                         console.warn("Clicked image container but no image found inside.");
                     }
-                     // Fetch images from detail page and show image modal
-                    this.fetchAndShowImageModal(detailUrl, drugTitle);
+
 
                  } else if (clickedSuggestionLink) {
                      event.preventDefault();
@@ -1457,209 +1754,387 @@
                      } else {
                          console.error("Could not get suggested term from link data attribute or termInput not found.");
                      }
-                 } else if (clickedSortButton) {
-                     const sortKey = clickedSortButton.getAttribute('data-sort-key');
-                     const sortDirection = clickedSortButton.getAttribute('data-sort-direction');
-
-                     if (sortKey && sortDirection) {
-                         this.currentSortKey = sortKey;
-                         this.currentSortDirection = sortDirection;
-                         this.sortResults(sortKey, sortDirection);
-                         this.resultDiv.querySelectorAll('.sort-controls button').forEach(btn => {
-                             btn.classList.remove('active');
-                         });
-                         clickedSortButton.classList.add('active');
-                     } else {
-                         console.error("Sort button missing data-sort-key or data-sort-direction attributes.");
-                     }
+                 } else if (clickedExpandButton) {
+                      const detailsSection = clickedExpandButton.previousElementSibling;
+                       if (detailsSection && detailsSection.classList.contains('other-details')) {
+                            detailsSection.classList.toggle('expanded');
+                            clickedExpandButton.classList.toggle('expanded');
+                       }
+                 } else if (clickedCopyButton) {
+                     const targetSelector = clickedCopyButton.getAttribute('data-copy-target');
+                      const textToCopyElement = clickedCopyButton.closest('.detail-row')?.querySelector(targetSelector);
+                       if (textToCopyElement) {
+                            const textToCopy = textToCopyElement.textContent.trim();
+                            copyTextToClipboard(textToCopy);
+                            clickedCopyButton.classList.add('copied');
+                             setTimeout(() => { clickedCopyButton.classList.remove('copied'); }, 1500);
+                       } else {
+                           console.warn("Could not find text element to copy:", targetSelector);
+                       }
                  }
                  // Clicks on .detail-link and .pagination a are not intercepted here
-            }
+            },
 
-             async fetchAndShowImageModal(detailUrl, drugTitle) {
+            // Handle change event for sort select
+            handleSortChange: function(event) {
+                 const changedSelect = event.target.closest('.sort-controls select');
+                  if (changedSelect) {
+                      const selectedValue = changedSelect.value;
+                      // Split value into key and direction (if not 'none')
+                      const [sortKey, sortDirection] = selectedValue.split('-');
+
+                       this.currentSortKey = sortKey;
+                       this.currentSortDirection = sortDirection || 'asc'; // Default direction if value is 'none'
+
+                       if (this.currentSortKey !== 'none') {
+                           this.sortResults(this.currentSortKey, this.currentSortDirection);
+                       } else {
+                           // If sorting by 'none', revert to original order (implicitly done by filterResults
+                           // which re-appends all visible items without sorting the array)
+                           this.filterResults(this.currentFilterKey, this.currentFilterValue);
+                       }
+
+                       this.updateStatusIndicator();
+                  }
+            },
+
+
+            // Handle change event for filter selects (more reliable than click)
+            handleFilterChange: function(event) {
+                 const changedSelect = event.target.closest('.filter-controls select');
+                  if (changedSelect) {
+                      const filterKey = changedSelect.getAttribute('data-filter-key');
+                      const filterValue = changedSelect.value;
+                       if (filterKey) {
+                            this.currentFilterKey = filterKey;
+                            this.currentFilterValue = filterValue;
+                            this.filterResults(filterKey, filterValue);
+                            // Re-apply sort after filter to maintain order within filtered results
+                             if (this.currentSortKey !== 'none') {
+                                 this.sortResults(this.currentSortKey, this.currentSortDirection);
+                             }
+                            this.updateStatusIndicator();
+                       } else {
+                           console.error("Filter select missing data-filter-key attribute.");
+                       }
+                  }
+            },
+
+
+            // Handle click event for search history items
+             handleHistoryItemClick: function(event) {
+                 const clickedLink = event.target.closest('.search-history li a');
+                 if (clickedLink) {
+                     event.preventDefault();
+                     const searchTerm = clickedLink.getAttribute('data-term');
+                     if (searchTerm && this.termInput) {
+                         this.termInput.value = searchTerm;
+                         this.handleInputDirection();
+                         this.handleClearButtonVisibility();
+                          // When re-running history search, reset sort and filter state
+                         this.currentSortKey = 'none';
+                         this.currentSortDirection = 'asc';
+                         this.currentFilterKey = 'owner';
+                         this.currentFilterValue = 'all';
+                         this.performSearch(searchTerm);
+                     }
+                 }
+             },
+
+             // Methods for managing search history in localStorage
+             loadSearchHistory: function() {
+                 if (!this.searchHistoryDiv || !this.searchHistoryListUl) return;
+
+                 try {
+                     const history = JSON.parse(localStorage.getItem(this.LOCAL_STORAGE_HISTORY_KEY)) || [];
+                     this.renderSearchHistory(history);
+                 } catch (e) {
+                     console.error("Error loading search history from localStorage:", e);
+                     localStorage.removeItem(this.LOCAL_STORAGE_HISTORY_KEY);
+                     this.renderSearchHistory([]);
+                 }
+             },
+
+             saveSearchTermToHistory: function(term) {
+                  if (!term || term.length < 2) return;
+
+                  let history = JSON.parse(localStorage.getItem(this.LOCAL_STORAGE_HISTORY_KEY)) || [];
+
+                  history = history.filter(item => item !== term);
+
+                  history.unshift(term);
+
+                  if (history.length > this.MAX_HISTORY_ITEMS) {
+                      history = history.slice(0, this.MAX_HISTORY_ITEMS);
+                  }
+
+                  try {
+                      localStorage.setItem(this.LOCAL_STORAGE_HISTORY_KEY, JSON.stringify(history));
+                      this.renderSearchHistory(history);
+                  } catch (e) {
+                      console.error("Error saving search history to localStorage:", e);
+                  }
+             },
+
+             renderSearchHistory: function(history) {
+                 if (!this.searchHistoryDiv || !this.searchHistoryListUl) return;
+
+                 this.searchHistoryListUl.innerHTML = '';
+
+                 if (history && history.length > 0) {
+                     history.forEach(term => {
+                         const li = document.createElement('li');
+                         const a = document.createElement('a');
+                         a.href = '#';
+                         a.textContent = term;
+                         a.setAttribute('data-term', term);
+                         li.appendChild(a);
+                         this.searchHistoryListUl.appendChild(li);
+                     });
+                     this.searchHistoryDiv.style.display = 'block';
+                 } else {
+                     this.searchHistoryDiv.style.display = 'none';
+                 }
+             },
+
+
+             fetchAndShowImageModal: async function(detailUrl, drugTitle) {
+                  // Ensure modal elements exist before showing
+                 if (!ImageModal.imageOverlay || !ImageModal.imageModal || !ImageModal.spinner) {
+                     console.error("ImageModal critical elements not initialized correctly.");
+                     return;
+                 }
+
                  // Immediately show loading state in the modal area
-                 if (this.ImageModal.spinner) this.ImageModal.spinner.style.display = 'block';
-                 this.ImageModal.show(); // Show modal container with spinner
+                 ImageModal.spinner.style.display = 'block';
+                 ImageModal.show(); // Show modal container with spinner
 
                  // Hide nav/caption/image while loading
-                 if (this.ImageModal.caption) this.ImageModal.caption.style.display = 'none';
-                 if (this.ImageModal.prevButton) this.ImageModal.prevButton.style.display = 'none';
-                 if (this.ImageModal.nextButton) this.ImageModal.nextButton.style.display = 'none';
-                 if (this.ImageModal.zoomedImage) this.ImageModal.zoomedImage.style.display = 'none';
+                 if (ImageModal.caption) ImageModal.caption.style.display = 'none';
+                 if (ImageModal.prevButton) ImageModal.prevButton.style.display = 'none';
+                 if (ImageModal.nextButton) ImageModal.nextButton.style.display = 'none';
+                 if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
+                 if (ImageModal.miniMapContainer) ImageModal.miniMapContainer.style.display = 'none';
+
 
                  try {
                      const detailResponse = await fetch(detailUrl);
-                     // --- FIX: Read response text BEFORE checking response.ok ---
                      const detailHtmlString = await detailResponse.text();
 
                      if (!detailResponse.ok) {
                           let errorDetail = `Status: ${detailResponse.status}`;
                            errorDetail += ` - ${detailResponse.statusText}`;
                            let responseTextSample = detailHtmlString.substring(0, 200);
-                           throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
+                           throw new Error(`HTTP error fetching detail page! ${errorDetail}. Response sample: ${responseTextSample}...`);
                      }
 
                      const parser = new DOMParser();
                      const detailDoc = parser.parseFromString(detailHtmlString, 'text/html');
 
-                     const galleryLinks = detailDoc.querySelectorAll('.searchBox1 a[data-lightbox="image-1"], .alignBtn a[data-lightbox="image-1"]');
+                     // Find all gallery image links and their thumbnail images on the detail page
+                     const galleryLinkElements = detailDoc.querySelectorAll('.searchBox1 a[data-lightbox="image-1"], .alignBtn a[data-lightbox="image-1"]');
 
                      const fetchedImageUrls = [];
-                     galleryLinks.forEach(link => {
-                         const href = link.getAttribute('href');
-                         if (href) {
-                            if (href.startsWith('/')) {
-                                fetchedImageUrls.push(`${this.targetBaseUrl}${href}`);
+                     const fetchedThumbnailUrls = []; // Store thumbnail URLs
+
+                     galleryLinkElements.forEach(link => {
+                         const fullHref = link.getAttribute('href');
+                         const thumbImg = link.querySelector('img'); // Find the thumbnail img inside the link
+                         const thumbSrc = thumbImg ? thumbImg.getAttribute('src') : null;
+
+                         if (fullHref) {
+                            // Ensure absolute URL for full image
+                            if (fullHref.startsWith('/')) {
+                                fetchedImageUrls.push(`${this.targetBaseUrl}${fullHref}`);
                             } else {
-                                fetchedImageUrls.push(href);
+                                fetchedImageUrls.push(fullHref); // Assume already absolute
+                            }
+                            // Ensure absolute URL for thumbnail image
+                            if (thumbSrc) {
+                                if (thumbSrc.startsWith('/')) {
+                                     fetchedThumbnailUrls.push(`${this.targetBaseUrl}${thumbSrc}`);
+                                } else {
+                                     fetchedThumbnailUrls.push(thumbSrc); // Assume already absolute
+                                }
+                            } else {
+                                fetchedThumbnailUrls.push(fullHref); // Fallback to full image if thumbnail not found
                             }
                          }
                      });
 
-                     console.log(`Found ${fetchedImageUrls.length} gallery images on detail page.`);
+                     console.log(`Found ${fetchedImageUrls.length} gallery images and ${fetchedThumbnailUrls.length} thumbnails on detail page.`);
 
                      if (fetchedImageUrls.length > 0) {
-                          this.ImageModal.show(fetchedImageUrls, drugTitle, 0);
+                          // Pass both image URLs and thumbnail URLs to show
+                          ImageModal.show(fetchedImageUrls, fetchedThumbnailUrls, drugTitle, 0);
                      } else {
-                          if (this.ImageModal.spinner) this.ImageModal.spinner.style.display = 'none';
-                          if (this.ImageModal.zoomedImage) this.ImageModal.zoomedImage.style.display = 'none';
-                         if (this.ImageModal.caption) {
-                             this.ImageModal.caption.textContent = 'عکسی در صفحه جزئیات یافت نشد.';
-                             this.ImageModal.caption.style.display = 'block';
-                             this.ImageModal.caption.style.opacity = 1;
+                         // If no images found on detail page, display a message within the modal area
+                          if (ImageModal.spinner) ImageModal.spinner.style.display = 'none';
+                          if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
+                         if (ImageModal.caption) {
+                             ImageModal.caption.textContent = 'عکسی در صفحه جزئیات یافت نشد.';
+                             ImageModal.caption.style.display = 'block';
+                             ImageModal.caption.style.opacity = 1;
                          }
-                         if (this.ImageModal.prevButton) this.ImageModal.prevButton.style.display = 'none';
-                         if (this.ImageModal.nextButton) this.ImageModal.nextButton.style.display = 'none';
+                         if (ImageModal.prevButton) ImageModal.prevButton.style.display = 'none';
+                         if (ImageModal.nextButton) ImageModal.nextButton.style.display = 'none';
+                         if (ImageModal.miniMapContainer) ImageModal.miniMapContainer.style.display = 'none'; // Hide mini-map
 
-                         this.ImageModal.currentGalleryImages = [];
-                         this.ImageModal.currentImageIndex = 0;
+                         // Keep modal open to show the "not found" message
+                         ImageModal.currentGalleryImages = [];
+                         ImageModal.currentMiniMapThumbnails = [];
+                         ImageModal.currentImageIndex = 0;
                      }
 
                  } catch (detailError) {
                      console.error('Error fetching or parsing detail page for images:', detailError);
-                      if (this.ImageModal.spinner) this.ImageModal.spinner.style.display = 'none';
-                      if (this.ImageModal.zoomedImage) this.ImageModal.zoomedImage.style.display = 'none';
-                     if (this.ImageModal.caption) {
-                         this.ImageModal.caption.textContent = `خطا در دریافت جزئیات عکس: ${detailError.message}`;
-                         this.ImageModal.caption.style.display = 'block';
-                         this.ImageModal.caption.style.opacity = 1;
+                      if (ImageModal.spinner) ImageModal.spinner.style.display = 'none';
+                      if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
+                     if (ImageModal.caption) {
+                         ImageModal.caption.textContent = `خطا در دریافت جزئیات عکس: ${detailError.message}`;
+                         ImageModal.caption.style.display = 'block';
+                         ImageModal.caption.style.opacity = 1;
                      }
-                     if (this.ImageModal.prevButton) this.ImageModal.prevButton.style.display = 'none';
-                     if (this.ImageModal.nextButton) this.ImageModal.nextButton.style.display = 'none';
+                     if (ImageModal.prevButton) ImageModal.prevButton.style.display = 'none';
+                     if (ImageModal.nextButton) ImageModal.nextButton.style.display = 'none';
+                      if (ImageModal.miniMapContainer) ImageModal.miniMapContainer.style.display = 'none';
 
-                     this.ImageModal.currentGalleryImages = [];
-                     this.ImageModal.currentImageIndex = 0;
+                     ImageModal.currentGalleryImages = [];
+                     ImageModal.currentMiniMapThumbnails = [];
+                     ImageModal.currentImageIndex = 0;
                  }
-             }
+             },
 
 
-            performSearch(searchTerm, pageNumber = 1, pushState = true) { // Removed pageSize from signature, use default in URL
-                 // Ensure resultDiv exists
+            performSearch: async function(searchTerm, pageNumber = 1, pageSize = 10) {
                  if (!this.resultDiv) {
                      console.error("SearchApp resultDiv not initialized.");
                      return;
                  }
 
-                 // Clear previous content
                 this.resultDiv.innerHTML = '';
-                // Hide initial messages if they are visible
-                if (this.initialMessage) this.initialMessage.style.display = 'none';
-                if (this.corsWarning) this.corsWarning.style.display = 'none';
 
-
-                // Add the main loading spinner dynamically
+                 const mainSpinnerContainer = document.createElement('div');
+                 mainSpinnerContainer.className = 'loading-container';
                  const mainSpinnerElement = document.createElement('div');
                  mainSpinnerElement.className = 'spinner';
-                 this.resultDiv.appendChild(mainSpinnerElement);
-                 this.mainLoadingSpinner = mainSpinnerElement; // Update reference
-
-                 this.resultDiv.className = 'loading-container'; // Add class for centering spinner
-                 if(this.mainLoadingSpinner) this.mainLoadingSpinner.style.display = 'block';
-
-
-                 // Use default pageSize (10) based on site behavior
-                 const pageSize = 10;
-                 const encodedSearchTerm = encodeURIComponent(searchTerm);
-                 const targetUrl = `${this.targetBaseUrl}${this.searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
-
-                 console.log(`Attempting to fetch search results from: ${targetUrl}`);
-
-                 // Update URL using History API (only if pushState is true)
-                 if (pushState) {
-                     const urlParams = new URLSearchParams();
-                     urlParams.set('Term', searchTerm);
-                     if (pageNumber !== 1) urlParams.set('PageNumber', pageNumber);
-                     // Note: Not adding sort state to URL for simplicity, but possible
-
-                     const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-                     history.pushState({ term: searchTerm, page: pageNumber, pageSize: pageSize }, '', newUrl);
-                     console.log("Pushed history state:", history.state);
-                 }
+                 const loadingMessage = document.createElement('p');
+                 loadingMessage.textContent = `در حال جستجو برای "${searchTerm}" صفحه ${pageNumber}...`;
+                 mainSpinnerContainer.appendChild(mainSpinnerElement);
+                 mainSpinnerContainer.appendChild(loadingMessage);
+                 this.resultDiv.appendChild(mainSpinnerContainer);
+                 this.mainLoadingSpinner = mainSpinnerElement;
 
 
-                fetch(targetUrl)
-                    .then(response => {
-                        return response.text().then(text => {
-                            if (!response.ok) {
-                                let errorDetail = `Status: ${response.status}`;
-                                errorDetail += ` - ${response.statusText}`;
-                                let responseTextSample = text.substring(0, 200);
-                                throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
-                            }
-                            return text;
-                        });
-                    })
-                    .then(htmlString => {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(htmlString, 'text/html');
+                const encodedSearchTerm = encodeURIComponent(searchTerm);
+                const targetUrl = `${this.targetBaseUrl}${this.searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
-                        const resultItems = doc.querySelectorAll('.RowSearchSty');
-                        let paginationElement = doc.querySelector('.pagination');
-                        const noResultsTitleElement = doc.querySelector('.txtSearchTitle1');
-                        const suggestionLinks = doc.querySelectorAll('.titleNotFind a');
+                console.log(`Attempting to fetch search results from: ${targetUrl}`);
+
+                 const url = new URL(window.location.href);
+                 url.searchParams.set('Term', searchTerm);
+                 url.searchParams.set('PageNumber', pageNumber);
+                 history.pushState({ term: searchTerm, page: pageNumber }, '', url.toString());
 
 
-                        // --- Render Results or No Results ---
-                         // Clear spinner now BEFORE rendering new content
-                        if (this.mainLoadingSpinner && this.mainLoadingSpinner.parentElement === this.resultDiv) {
-                            this.mainLoadingSpinner.remove();
-                        }
-                        this.resultDiv.classList.remove('loading-container');
+                try {
+                    const response = await fetch(targetUrl);
+                    const htmlString = await response.text();
+
+                    if (!response.ok) {
+                         let errorDetail = `Status: ${response.status}`;
+                           errorDetail += ` - ${response.statusText}`;
+                           let responseTextSample = htmlString.substring(0, 200);
+                           throw new Error(`HTTP error! ${errorDetail}. Response sample: ${responseTextSample}...`);
+                    }
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlString, 'text/html');
+
+                    const resultItems = doc.querySelectorAll('.RowSearchSty');
+                    let paginationElement = doc.querySelector('.pagination');
+                    const noResultsTitleElement = doc.querySelector('.txtSearchTitle1');
+                    const suggestionLinks = doc.querySelectorAll('.titleNotFind a');
 
 
-                        if (noResultsTitleElement && suggestionLinks.length > 0 && resultItems.length === 0) {
-                             this.renderNoResults(noResultsTitleElement, suggestionLinks);
-                        } else if (resultItems.length > 0) {
-                             this.renderResults(resultItems, paginationElement);
-                              // Scroll to top after rendering results
-                             window.scrollTo({ top: 0, behavior: 'smooth' });
-                        } else {
-                             this.renderGenericNoResults();
-                        }
+                    // --- Render Results or No Results ---
+                    this.resultDiv.innerHTML = '';
 
-                    })
-                    .catch(error => {
-                        this.renderError(error);
-                    })
-                    .finally(() => {
-                         // Ensure spinner is removed and class is removed even if an error occurred after initial fetch
-                        const currentSpinner = this.resultDiv.querySelector('.spinner');
-                         if(currentSpinner) currentSpinner.remove();
-                        this.resultDiv.classList.remove('loading-container');
-                    });
-            }
+                    if (noResultsTitleElement && suggestionLinks.length > 0 && resultItems.length === 0) {
+                         this.renderNoResults(noResultsTitleElement, suggestionLinks);
+                         this.allResultsOnCurrentPage = [];
+                    } else if (resultItems.length > 0) {
+                         this.renderResults(resultItems, paginationElement);
+                    } else {
+                         this.renderGenericNoResults();
+                         this.allResultsOnCurrentPage = [];
+                    }
 
-             renderResults(resultItems, paginationElement) {
+
+                } catch (error) {
+                    this.renderError(error);
+                    this.allResultsOnCurrentPage = [];
+                }
+            },
+
+             renderResults: function(resultItems, paginationElement) {
                  console.log(`Detected ${resultItems.length} search results.`);
+
+                 // Collect unique owners for filter dropdowns
+                 const owners = new Set();
+                 resultItems.forEach(item => {
+                     const detailRows = item.querySelectorAll('.searchRow > .row');
+                     detailRows.forEach(row => {
+                         const labelsInRow = row.querySelectorAll('label');
+                         labelsInRow.forEach(label => {
+                             const labelText = label.textContent.trim();
+                             const valueElement = label.closest('.col-lg-4, .col-md-4, .col-sm-6, .col-xs-12')?.querySelector('span.txtSearch1, span.priceTxt, bdo, span.txtAlignLTR');
+
+                             if (valueElement) {
+                                 const valueText = valueElement.textContent.trim();
+                                 if (labelText.includes('صاحب برند')) owners.add(valueText);
+                             }
+                         });
+                    });
+                 });
+
+                 const sortedOwners = Array.from(owners).sort();
+
+
                  let resultsHtml = '<h3 style="color: #1f3a65; margin-bottom: 30px; text-align: center;">نتایج جستجو:</h3>';
 
-                 // Add sorting controls here
+                 // Add sorting controls (using a select dropdown)
                  resultsHtml += `
                      <div class="sort-controls">
-                         <span>مرتب‌سازی بر اساس قیمت:</span>
-                         <button data-sort-key="price" data-sort-direction="asc" aria-label="مرتب سازی صعودی قیمت">صعودی</button>
-                         <button data-sort-key="price" data-sort-direction="desc" aria-label="مرتب سازی نزولی قیمت">نزولی</button>
+                         <label for="sortSelect">مرتب‌سازی بر اساس:</label>
+                         <select id="sortSelect">
+                              <option value="none">مرتبط‌ترین</option> <!-- Default -->
+                              <option value="price-asc">قیمت صعودی</option>
+                              <option value="price-desc">قیمت نزولی</option>
+                              <option value="persian-title-asc">نام فارسی (الفبا)</option>
+                              <option value="english-title-asc">نام انگلیسی (الفبا)</option>
+                         </select>
                      </div>
+                 `;
+
+                 // Add filtering controls (using a select dropdown for owners only)
+                 resultsHtml += `
+                     <div class="filter-controls">
+                          <div class="filter-group">
+                             <label for="ownerFilter">صاحب برند:</label>
+                             <select id="ownerFilter" data-filter-key="owner">
+                                 <option value="all">همه</option>
+                                 ${sortedOwners.map(owner => `<option value="${escapeHtml(owner)}">${escapeHtml(owner)}</option>`).join('')}
+                             </select>
+                          </div>
+                     </div>
+                 `;
+
+                 // Add indicator for current sort/filter status
+                 resultsHtml += `
+                    <div id="currentStatusIndicator" style="font-size: 0.9em; color: #555; text-align: left; margin-bottom: 15px;">
+                        <!-- Status text will be updated here -->
+                    </div>
                  `;
 
 
@@ -1674,9 +2149,7 @@
                     let englishTitle = englishLinkElement ? englishLinkElement.textContent.trim() : 'English Title Not Found';
                     englishTitle = englishTitle.replace(/^\(|\)$/g, '').trim();
 
-                    // Get the detail link href
                     const detailLink = persianLinkElement ? persianLinkElement.getAttribute('href') : '#';
-                     // Make detail link absolute for the href attribute
                     const absoluteDetailLink = detailLink && detailLink !== '#' && !detailLink.startsWith('http') ? `${this.targetBaseUrl}${detailLink}` : detailLink;
 
 
@@ -1686,39 +2159,40 @@
 
                     let details = {};
                     let rawPrice = '0';
+                    let ownerName = '';
+                    // Removed shapeName, routeName extraction as these filters were removed
+
                     const detailRows = item.querySelectorAll('.searchRow > .row');
                     detailRows.forEach(row => {
-                        const columns = row.querySelectorAll('.col-lg-4, .col-md-4, col-sm-6, col-xs-12');
-                        columns.forEach(col => {
-                            const labelElement = col.querySelector('label');
-                            const valueElement = col.querySelector('span.txtSearch1, span.priceTxt, bdo');
-                            if (labelElement && valueElement) {
-                                const labelText = labelElement.textContent.trim();
-                                const valueText = valueElement.textContent.trim();
-                                if (labelText.includes('صاحب برند')) details.brandOwner = valueText;
-                                else if (labelText.includes('صاحب پروانه')) details.licenseHolder = valueText;
-                                else if (labelText.includes('قیمت هر بسته')) {
-                                     rawPrice = valueText;
-                                     details.price = addCommas(valueText);
-                                }
-                                else if (labelText.includes('بسته بندی')) details.packaging = valueText;
-                                else if (labelText.includes('کد فرآورده')) details.productCode = valueText;
-                                else if (labelText.includes('کد ژنریک')) details.genericCode = valueText;
-                            }
-                        });
+                         const labelsInRow = row.querySelectorAll('label');
+                         labelsInRow.forEach(label => {
+                             const labelText = label.textContent.trim();
+                             const valueElement = label.closest('.col-lg-4, .col-md-4, .col-sm-6, .col-xs-12')?.querySelector('span.txtSearch1, span.priceTxt, bdo, span.txtAlignLTR');
+
+                             if (valueElement) {
+                                 const valueText = valueElement.textContent.trim();
+                                 if (labelText.includes('صاحب برند')) { details.brandOwner = valueText; ownerName = valueText;}
+                                 else if (labelText.includes('صاحب پروانه')) details.licenseHolder = valueText;
+                                 else if (labelText.includes('قیمت هر بسته')) { rawPrice = valueText; details.price = addCommas(valueText);}
+                                 else if (labelText.includes('بسته بندی')) details.packaging = valueText;
+                                 else if (labelText.includes('کد فرآورده')) details.productCode = valueText;
+                                 else if (labelText.includes('کد ژنریک')) details.genericCode = valueText;
+                                 // Removed extraction for shape and route
+                             }
+                         });
                     });
 
-                    // --- Build HTML for a single card (with data attributes including raw price) ---
+                    // Build HTML for a single card
                     resultsHtml += `
-                        <li>
-                            <div class="drug-card" data-raw-price="${rawPrice}">
+                        <li class="result-item">
+                            <div class="drug-card" data-raw-price="${rawPrice}" data-owner="${escapeHtml(ownerName)}"> <!-- Removed data-shape, data-route -->
                                 ${imageUrl ? `
-                                    <div class="card-image" data-detail-url="${absoluteDetailLink}" data-drug-title="${persianTitle}">
-                                        <img src="${imageUrl}" alt="${imageAlt}" loading="lazy" />
+                                    <div class="card-image" data-detail-url="${absoluteDetailLink}" data-drug-title="${escapeHtml(persianTitle)}">
+                                        <img src="${imageUrl}" alt="${escapeHtml(imageAlt)}" loading="lazy" />
                                     </div>` : ''}
                                 <div class="card-content">
-                                    <h3>${persianTitle}</h3>
-                                    <p class="english-title" dir="ltr">${englishTitle}</p>
+                                    <h3>${this.highlightSearchTerm(persianTitle, this.termInput ? this.termInput.value : '')}</h3>
+                                    <p class="english-title" dir="ltr">${this.highlightSearchTerm(englishTitle, this.termInput ? this.termInput.value : '')}</p>
 
                                     <div class="main-details">
                                         ${details.price ? `
@@ -1729,17 +2203,23 @@
                                             </div>` : ''}
                                     </div>
 
+                                    <!-- Expandable Other Details Section -->
                                     <div class="other-details">
-                                        ${details.brandOwner ? `<div class="detail-row"><label>صاحب برند:</label> <span>${details.brandOwner}</span></div>` : ''}
-                                        ${details.licenseHolder ? `<div class="detail-row"><label>صاحب پروانه:</label> <span>${details.licenseHolder}</span></div>` : ''}
-                                        ${details.packaging ? `<div class="detail-row"><label>بسته بندی:</label> <bdo>${details.packaging}</bdo></div>` : ''}
-                                        ${details.productCode ? `<div class="detail-row"><label>کد فرآورده:</label> <span>${details.productCode}</span></div>` : ''}
-                                        ${details.genericCode ? `<div class="detail-row"><label>کد ژنریک:</label> <span>${details.genericCode}</span></div>` : ''}
-                                    </div>
+                                         ${ownerName ? `<div class="detail-row"><label>صاحب برند:</label> <span>${ownerName}</span></div>` : ''}
+                                         ${details.licenseHolder ? `<div class="detail-row"><label>صاحب پروانه:</label> <span>${details.licenseHolder}</span></div>` : ''}
+                                         <!-- Removed shape and route display -->
+                                         ${details.packaging ? `<div class="detail-row"><label>بسته بندی:</label> <bdo>${details.packaging}</bdo></div>` : ''}
 
-                                    <!-- Link href is the absolute URL, target="_blank" opens in new tab -->
-                                    <!-- Styling is applied via the CSS class .detail-link -->
-                                    <a href="${absoluteDetailLink}" target="_blank" class="detail-link" aria-label="مشاهده جزئیات ${persianTitle} در سایت اصلی">مشاهده جزئیات در سایت اصلی</a>
+
+                                        <!-- Add copy buttons for codes -->
+                                        ${details.productCode ? `<div class="detail-row"><label>کد فرآورده:</label> <span class="copy-text" id="prodCode_${item.dataset.id || 'unique'}">${details.productCode}</span> <i class="fas fa-copy copy-button" data-copy-target="#prodCode_${item.dataset.id || 'unique'}" title="کپی کردن کد"></i></div>` : ''}
+                                        ${details.genericCode ? `<div class="detail-row"><label>کد ژنریک:</label> <span class="copy-text" id="genCode_${item.dataset.id || 'unique'}">${details.genericCode}</span> <i class="fas fa-copy copy-button" data-copy-target="#genCode_${item.dataset.id || 'unique'}" title="کپی کردن کد"></i></div>` : ''}
+
+                                    </div>
+                                    <button class="expand-details-button"></button>
+
+
+                                    <a href="${absoluteDetailLink}" target="_blank" class="detail-link">مشاهده جزئیات در سایت اصلی</a>
                                 </div>
                             </div>
                         </li>
@@ -1761,24 +2241,14 @@
                         const pageNum = hrefParams['PageNumber'] ? parseInt(hrefParams['PageNumber']) : 1;
                         const currentTerm = this.termInput ? this.termInput.value.trim() : '';
 
-                         // Ensure pagination link href is absolute to properly extract term
                         const absoluteLinkHref = linkHref && !linkHref.startsWith('http') ? `${this.targetBaseUrl}${linkHref}` : linkHref;
                         const paginationLinkParams = getQueryParams(absoluteLinkHref);
                         const termForPagination = paginationLinkParams['Term'] || currentTerm;
 
-                        // Determine if this is the active page link
-                        const isActive = link.parentElement.classList.contains('active');
 
                         resultsHtml += `
                             <li class="${linkClass}">
-                                <a href="#"
-                                   data-page="${pageNum}"
-                                   data-term="${termForPagination}"
-                                   ${isActive ? 'aria-current="page"' : ''}
-                                   aria-label="صفحه ${pageNum} ${isActive ? 'فعلی' : ''}"
-                                   tabindex="${isActive ? '-1' : '0'}">
-                                    ${buttonText}
-                                </a>
+                                <a href="#" data-page="${pageNum}" data-term="${termForPagination}">${buttonText}</a>
                             </li>`;
                     });
                    resultsHtml += '</ul></div>';
@@ -1788,19 +2258,22 @@
                 this.resultDiv.innerHTML = resultsHtml;
 
 
-                 // --- AFTER rendering, re-attach event listeners and apply initial/current sort ---
+                 // --- AFTER rendering, re-attach event listeners and apply initial/current filter/sort ---
 
                  // Re-attach event listeners to the new pagination links
-                 // These listeners should still trigger performSearch, NOT default link action
                  if (this.resultDiv.querySelector('.pagination')) {
                      this.resultDiv.querySelectorAll('.pagination a').forEach(link => {
-                          // Check if listener is already attached? No, innerHTML replaces, so always attach
                           link.addEventListener('click', function(e) {
-                              e.preventDefault(); // Prevent default link behavior
+                              e.preventDefault();
                               const page = this.getAttribute('data-page');
                               const term = this.getAttribute('data-term');
                               if (page && term) {
                                   if(SearchApp.termInput) SearchApp.termInput.value = term;
+                                  // When changing page, reset sort and filter state
+                                   SearchApp.currentSortKey = 'none';
+                                   SearchApp.currentSortDirection = 'asc';
+                                   SearchApp.currentFilterKey = 'owner';
+                                   SearchApp.currentFilterValue = 'all';
                                   SearchApp.performSearch(term, parseInt(page));
                               } else {
                                   console.error("Could not get page number or term from pagination link data attributes.");
@@ -1809,27 +2282,73 @@
                      });
                  }
 
-                 // Apply the current sort state after rendering
-                 if (this.currentSortKey !== 'none') {
-                     this.sortResults(this.currentSortKey, this.currentSortDirection);
-                     // Also highlight the active sort button
-                     const activeBtn = this.resultDiv.querySelector(`.sort-controls button[data-sort-key="${this.currentSortKey}"][data-sort-direction="${this.currentSortDirection}"]`);
-                     if (activeBtn) activeBtn.classList.add('active');
-                 }
-            }
+                 // Get references to filter/sort selects AFTER they are added to DOM
+                 this.ownerFilterSelect = this.resultDiv.querySelector('#ownerFilter');
+                 this.sortSelect = this.resultDiv.querySelector('#sortSelect');
+                  this.statusIndicator = this.resultDiv.querySelector('#currentStatusIndicator');
 
-            // Method to sort the displayed results
-             sortResults(sortKey, sortDirection) {
+
+                // Re-attach change listeners to the filter/sort selects
+                if(this.ownerFilterSelect) {
+                    this.ownerFilterSelect.value = this.currentFilterValue;
+                    this.ownerFilterSelect.addEventListener('change', this.handleFilterChange.bind(this));
+                }
+                 if(this.sortSelect) {
+                      const sortValue = this.currentSortKey === 'none' ? 'none' : `${this.currentSortKey}-${this.currentSortDirection}`;
+                     this.sortSelect.value = sortValue;
+                      this.sortSelect.addEventListener('change', this.handleSortChange.bind(this));
+                 }
+
+
+                 // Store the rendered list items AFTER filters/sort controls are added
+                  const resultsListUl = this.resultDiv.querySelector('#resultsList');
+                   if(resultsListUl) {
+                        this.allResultsOnCurrentPage = Array.from(resultsListUl.querySelectorAll('li.result-item'));
+
+                       // Apply the current filter (even if it's "all") to the newly rendered items
+                       this.filterResults(this.currentFilterKey, this.currentFilterValue);
+
+                       // Apply the current sort state after filtering
+                       if (this.currentSortKey !== 'none') {
+                           this.sortResults(this.currentSortKey, this.currentSortDirection);
+                       }
+
+                       // Update the status indicator after all rendering and sorting/filtering
+                       this.updateStatusIndicator();
+
+                       // Check if 'Other Details' sections should be collapsible and toggle state if needed
+                       this.allResultsOnCurrentPage.forEach(item => {
+                            const otherDetails = item.querySelector('.other-details');
+                            const expandButton = item.querySelector('.expand-details-button');
+                            if (otherDetails && expandButton) {
+                                if (otherDetails.scrollHeight > otherDetails.clientHeight) {
+                                    otherDetails.classList.add('is-collapsible');
+                                    expandButton.style.display = 'block';
+                                } else {
+                                     otherDetails.classList.remove('is-collapsible');
+                                     expandButton.style.display = 'none';
+                                }
+                            }
+                       });
+
+
+                   } else {
+                        this.allResultsOnCurrentPage = [];
+                        this.updateStatusIndicator();
+                   }
+             },
+
+            // Method to sort the displayed results (works on allResultsOnCurrentPage)
+             sortResults: function(sortKey, sortDirection) {
                  const resultsListUl = this.resultDiv.querySelector('#resultsList');
-                 if (!resultsListUl) {
-                     console.warn("Results list UL not found for sorting.");
+                 if (!resultsListUl || !this.allResultsOnCurrentPage || this.allResultsOnCurrentPage.length === 0) {
+                     console.warn("Results list UL or items not found for sorting.");
                      return;
                  }
 
-                 const listItems = Array.from(resultsListUl.querySelectorAll('li'));
-
-                 listItems.sort((a, b) => {
+                 this.allResultsOnCurrentPage.sort((a, b) => {
                      let aValue, bValue;
+                     let comparison = 0;
 
                      if (sortKey === 'price') {
                          const aPriceStr = a.querySelector('.drug-card')?.getAttribute('data-raw-price') || '0';
@@ -1840,16 +2359,26 @@
                          if (isNaN(aValue)) aValue = 0;
                          if (isNaN(bValue)) bValue = 0;
 
+                          if (aValue > bValue) { comparison = 1; }
+                          else if (aValue < bValue) { comparison = -1; }
+
+                     } else if (sortKey === 'persian-title') {
+                         const aTitle = a.querySelector('h3')?.textContent.trim() || '';
+                         const bTitle = b.querySelector('h3')?.textContent.trim() || '';
+                         aValue = aTitle;
+                         bValue = bTitle;
+                         comparison = aValue.localeCompare(bValue, 'fa', {sensitivity: 'base'});
+
+                     } else if (sortKey === 'english-title') {
+                         const aTitle = a.querySelector('.english-title')?.textContent.trim() || '';
+                         const bTitle = b.querySelector('.english-title')?.textContent.trim() || '';
+                         aValue = aTitle;
+                         bValue = bTitle;
+                         comparison = aValue.localeCompare(bValue, 'en', {sensitivity: 'base'});
                      }
                      // Add other sort keys here
 
-                     let comparison = 0;
-                     if (aValue > bValue) {
-                         comparison = 1;
-                     } else if (aValue < bValue) {
-                         comparison = -1;
-                     }
-
+                     // Apply direction for the final comparison result
                      if (sortDirection === 'desc') {
                          comparison = comparison * -1;
                      }
@@ -1857,17 +2386,135 @@
                      return comparison;
                  });
 
+                 // Re-append sorted & filtered items to the UL
                  const fragment = document.createDocumentFragment();
-                 listItems.forEach(item => {
-                     fragment.appendChild(item);
+                 this.allResultsOnCurrentPage.forEach(item => {
+                     // Only append items that are currently visible
+                     if (item.style.display !== 'none') {
+                        fragment.appendChild(item);
+                     }
                  });
+                 resultsListUl.innerHTML = '';
                  resultsListUl.appendChild(fragment);
 
-                 console.log(`Results sorted by ${sortKey} ${sortDirection}.`);
-             }
+                 console.log(`Displayed results sorted by ${sortKey} ${sortDirection}.`);
+             },
+
+            // Method to filter the displayed results (works on allResultsOnCurrentPage)
+             filterResults: function(filterKey, filterValue) {
+                 const resultsListUl = this.resultDiv.querySelector('#resultsList');
+                  if (!resultsListUl || !this.allResultsOnCurrentPage || this.allResultsOnCurrentPage.length === 0) {
+                      if (this.resultDiv.querySelector('.results-list')) {
+                            console.warn("No results found to filter.");
+                      }
+                     return;
+                 }
+
+                 console.log(`Filtering by ${filterKey}: ${filterValue}`);
+
+                 const activeFilters = [];
+                 if (this.currentFilterKey === 'owner' && this.currentFilterValue !== 'all') {
+                     activeFilters.push({ key: 'owner', value: this.currentFilterValue });
+                 }
+                 // Add other active filters if you add more filter types/controls
 
 
-             renderNoResults(noResultsTitleElement, suggestionLinks) {
+                 this.allResultsOnCurrentPage.forEach(item => {
+                     const drugCard = item.querySelector('.drug-card');
+                     if (!drugCard) return;
+
+                     let showItem = true;
+
+                     for (const filter of activeFilters) {
+                         const itemValue = drugCard.getAttribute(`data-${filter.key}`);
+                         if (itemValue !== filter.value) {
+                             showItem = false;
+                             break;
+                         }
+                     }
+
+                     item.style.display = showItem ? 'list-item' : 'none';
+                 });
+
+                 // After filtering, re-sort the now (invisibly) filtered items
+                  if (this.currentSortKey !== 'none') {
+                      this.sortResults(this.currentSortKey, this.currentSortDirection);
+                  } else {
+                       const fragment = document.createDocumentFragment();
+                        this.allResultsOnCurrentPage.forEach(item => {
+                            if (item.style.display !== 'none') {
+                                fragment.appendChild(item);
+                            }
+                        });
+                        resultsListUl.innerHTML = '';
+                        resultsListUl.appendChild(fragment);
+                  }
+
+                 console.log("Filtering complete.");
+                 this.updateStatusIndicator();
+             },
+
+             // Method to update the text indicator for sort and filter
+             updateStatusIndicator: function() {
+                 const indicatorElement = this.resultDiv.querySelector('#currentStatusIndicator');
+                 if (!indicatorElement) return;
+
+                 let statusText = '';
+                 const totalItems = this.allResultsOnCurrentPage ? this.allResultsOnCurrentPage.length : 0;
+                 const visibleItems = this.allResultsOnCurrentPage ? this.allResultsOnCurrentPage.filter(item => item.style.display !== 'none').length : 0;
+
+                 if (totalItems > 0) {
+                      statusText += `تعداد نتایج یافت شده: ${totalItems}`;
+                       if (visibleItems < totalItems) {
+                           statusText += ` (${visibleItems} مورد نمایش داده می‌شود)`;
+                       } else {
+                           statusText += ` (${visibleItems} مورد نمایش داده می‌شود)`;
+                       }
+                 } else {
+                      statusText += `تعداد نتایج یافت شده: 0`;
+                 }
+
+
+                 // Add sort status
+                 if (this.currentSortKey === 'price') {
+                     const sortDirText = this.currentSortDirection === 'asc' ? 'صعودی' : 'نزولی';
+                     statusText += ` | مرتب‌سازی: قیمت (${sortDirText})`;
+                 } else if (this.currentSortKey === 'persian-title') {
+                      const sortDirText = this.currentSortDirection === 'asc' ? 'الفبایی صعودی' : 'الفبایی نزولی';
+                      statusText += ` | مرتب‌سازی: نام فارسی (${sortDirText})`;
+                 } else if (this.currentSortKey === 'english-title') {
+                      const sortDirText = this.currentSortDirection === 'asc' ? 'الفبایی صعودی' : 'الفبایی نزولی';
+                      statusText += ` | مرتب‌سازی: نام انگلیسی (${sortDirText})`;
+                 } else if (this.currentSortKey === 'none' && totalItems > 0) {
+                      statusText += ` | مرتب‌سازی: مرتبط‌ترین`;
+                 }
+
+
+                 // Add filter status
+                 if (this.currentFilterKey === 'owner' && this.currentFilterValue !== 'all') {
+                      statusText += ` | فیلتر: صاحب برند ("${this.currentFilterValue}")`;
+                 }
+                 // Add other filter key statuses
+
+                  indicatorElement.textContent = statusText;
+
+                   indicatorElement.style.display = 'block';
+
+             },
+
+
+             // Method to highlight search terms in text
+            highlightSearchTerm: function(text, term) {
+                if (!text || !term || term.length < 2) return text;
+
+                const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedTerm})`, 'gi');
+
+                return text.replace(regex, '<span class="highlight">$1</span>');
+            },
+
+
+             renderNoResults: function(noResultsTitleElement, suggestionLinks) {
                  console.log("Detected no results and suggestions.");
                  const noResultsMessage = noResultsTitleElement.textContent.trim();
                  let resultsHtml = `
@@ -1890,15 +2537,19 @@
                  resultsHtml += `</ul></div>`;
 
                  this.resultDiv.innerHTML = resultsHtml;
-             }
+                 this.resultDiv.className = '';
+                 this.updateStatusIndicator();
+             },
 
-             renderGenericNoResults() {
+             renderGenericNoResults: function() {
                  console.log("No search results or suggestion structure found.");
                  this.resultDiv.innerHTML = '<p style="text-align: center;">نتیجه‌ای برای جستجوی شما یافت نشد.</p>';
-             }
+                 this.resultDiv.className = '';
+                 this.updateStatusIndicator();
+             },
 
 
-             renderError(error) {
+             renderError: function(error) {
                 console.error('Search failed:', error);
                 let errorMessage = '<p style="color: red;">مشکل در دریافت یا پردازش نتایج جستجو.</p>';
 
@@ -1911,35 +2562,87 @@
                 }
                  else {
                     errorMessage += `<p>جزئیات خطا: ${error.message}</p>`;
-                }
+                 }
 
                 this.resultDiv.innerHTML = errorMessage;
                 this.resultDiv.className = 'error';
+                this.updateStatusIndicator();
             }
+        };
+
+
+        // Utility function (can remain global or nested)
+        function getQueryParams(url) {
+            const queryStartIndex = url.indexOf('?');
+            if (queryStartIndex === -1) return {};
+
+            const params = {};
+            const queryString = url.substring(queryStartIndex + 1);
+            if (queryString) {
+                try {
+                    const urlParams = new URLSearchParams(queryString);
+                    for (const [key, value] of urlParams) {
+                        params[key] = value;
+                    }
+                } catch(e) {
+                     console.error("Error parsing query string:", queryString, e);
+                }
+            }
+            return params;
         }
+
+        function addCommas(nStr) {
+            nStr += '';
+            const x = nStr.split('.');
+            let x1 = x[0];
+            const x2 = x.length > 1 ? '.' + x[1] : '';
+            const rgx = /(\d+)(\d{3})/;
+            while (rgx.test(x1)) {
+                x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            }
+            return x1 + x2;
+        }
+
+        function getIconicPaginationText(originalText) {
+            const trimmedText = originalText.trim();
+            if (trimmedText === '>>') return '«';
+            if (trimmedText === '<') return '›';
+            if (trimmedText === '>') return '‹';
+            if (trimmedText === '<<') return '»';
+             if (/^\d+$/.test(trimmedText)) {
+                 return trimmedText;
+             }
+            return originalText;
+        }
+
+         // Utility function to escape HTML for safety when putting text into attributes or content
+         function escapeHtml(unsafe) {
+             if (typeof unsafe !== 'string') return unsafe;
+             return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+         }
+
+         // Utility function to copy text to clipboard
+         async function copyTextToClipboard(text) {
+             try {
+                 await navigator.clipboard.writeText(text);
+                 console.log('Text copied to clipboard:', text);
+             } catch (err) {
+                 console.error('Failed to copy text: ', err);
+                 alert('امکان کپی در مرورگر شما وجود ندارد یا با خطا مواجه شد.');
+             }
+         }
 
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-             // Small delay to ensure all DOM elements are truly ready, just in case
              setTimeout(() => {
-                 // Ensure core elements exist before initializing SearchApp
-                 const searchForm = document.querySelector('#subscribe .subscribe-inputs1 form');
-                 const termInput = document.getElementById('Term');
-                 const resultDiv = document.getElementById('simulationResult');
-                 const modalOverlay = document.getElementById('modalOverlay');
-                 const imageModal = document.getElementById('imageModal');
-                 const closeImageButton = document.getElementById('closeImageModalButton');
-
-
-                 if (searchForm && termInput && resultDiv && modalOverlay && imageModal && closeImageButton) {
-                      window.SearchApp = new SearchApp(); // Make it global for easy access
-                 } else {
-                     console.error("FATAL ERROR: Core application elements not found. Check HTML structure.");
-                 }
-
+                 SearchApp.init();
              }, 50);
-
         });
 
     </script>
